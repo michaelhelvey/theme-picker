@@ -51,6 +51,17 @@ Use `os.homedir()` or another base path for the target paths. Select the helper 
   application after a write.
 - `runCommand(command, args)` is the same, but it returns an error when the command fails.
 
+For the common dotfiles apps, `src/theme.ts` also has convenience helpers that patch the block and
+reload the app:
+
+- `applyGhosttyConfig(path, content)` patches the Ghostty config and asks Ghostty to reload.
+- `applyTmuxConfig(path, content)` patches the tmux config and reloads tmux. It also reinstalls the
+  plugins and restarts the server when the plugin set changes.
+- `applyHerdrConfig(path, content)` patches the herdr config and asks herdr to reload.
+
+Use these when the target is one of those apps. Use `patchDelimitedBlock` and `tryRunCommand` for
+any other file.
+
 Template:
 
     import os from "node:os";

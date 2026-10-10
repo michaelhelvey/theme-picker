@@ -1,7 +1,7 @@
 import os from "node:os";
 import path from "node:path";
 import type { ThemeModule } from "../src/config";
-import { patchDelimitedBlock, tryRunCommand, writeFileContent } from "../src/theme";
+import { applyGhosttyConfig, applyTmuxConfig, writeFileContent } from "../src/theme";
 
 const homeDir = os.homedir();
 
@@ -103,19 +103,13 @@ return {
   },
 }`;
 
-const ghosttyReloadScript =
-  'tell application "System Events" to tell process "Ghostty" to click menu item "Reload ' +
-  'Configuration" of menu "Ghostty" of menu bar item "Ghostty" of menu bar 1';
-
 /**
  * The jonhoo theme. This theme applies the Gruvbox Dark Hard colors to Ghostty, tmux, and Neovim.
  */
 export default {
   apply() {
-    return patchDelimitedBlock(ghosttyConfigPath, "#", ghosttyConfig)
-      .andThen(() => tryRunCommand("osascript", ["-e", ghosttyReloadScript]))
-      .andThen(() => patchDelimitedBlock(tmuxConfigPath, "#", tmuxConfig))
-      .andThen(() => tryRunCommand("tmux", ["source-file", tmuxConfigPath]))
+    return applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig)
+      .andThen(() => applyTmuxConfig(tmuxConfigPath, tmuxConfig))
       .andThen(() => writeFileContent(neovimColorsPath, neovimColors));
   },
 } satisfies ThemeModule;

@@ -1,5 +1,6 @@
 import { errAsync, okAsync, ResultAsync } from "neverthrow";
 import { lstat, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 
 const BLOCK_START = ">>> theme-picker >>>";
@@ -178,5 +179,111 @@ export function tryRunCommand(command: string, args: string[]): ResultAsync<void
   return runCommand(command, args).orElse((error) => {
     console.warn(`Warning: ${describeCommandError(error)}`);
     return okAsync(undefined);
+  });
+}
+
+const GHOSTTY_RELOAD_SCRIPT =
+  'tell application "System Events" to tell process "Ghostty" to click menu item "Reload ' +
+  'Configuration" of menu "Ghostty" of menu bar item "Ghostty" of menu bar 1';
+
+/**
+ * Applies a Ghostty config block and asks Ghostty to reload.
+ *
+ * @param filePath The path of the Ghostty config file.
+ * @param content The content to put between the theme-picker markers.
+ * @returns A result that fails when the file system refuses a read or write.
+ */
+export function applyGhosttyConfig(filePath: string, content: string): ResultAsync<void, Error> {
+  return patchDelimitedBlock(filePath, "#", content).andThen(() =>
+    tryRunCommand("osascript", ["-e", GHOSTTY_RELOAD_SCRIPT]),
+  );
+}
+
+/**
+ * Applies a herdr config block and asks herdr to reload.
+ *
+ * @param filePath The path of the herdr config file.
+ * @param content The content to put between the theme-picker markers.
+ * @returns A result that fails when the file system refuses a read or write.
+ */
+export function applyHerdrConfig(filePath: string, content: string): ResultAsync<void, Error> {
+  return patchDelimitedBlock(filePath, "#", content).andThen(() =>
+    tryRunCommand("herdr", ["server", "reload-config"]),
+  );
+}
+
+function extractPlugins(content: string): Set<string> {
+  const matches = content.matchAll(/@plugin\s+'([^']+)'/g);
+  return new Set(
+    Array.from(matches, (match) => match[1]).filter(
+      (plugin): plugin is string => plugin !== undefined,
+    ),
+  );
+}
+
+function matchBlock(content: string, startMarker: string, endMarker: string): string {
+  const pattern = new RegExp(`${escapeRegExp(startMarker)}([\\s\\S]*?)${escapeRegExp(endMarker)}`);
+  return pattern.exec(content)?.[1] ?? "";
+}
+
+function isTmuxRunning(): ResultAsync<boolean, never> {
+  return runCommand("tmux", ["list-sessions"])
+    .map(() => true)
+    .orElse(() => okAsync(false));
+}
+
+function installTmuxPlugins(): ResultAsync<void, never> {
+  const binDir = path.join(os.homedir(), ".tmux", "plugins", "tpm", "bin");
+  return tryRunCommand(path.join(binDir, "install_plugins"), []).andThen(() =>
+    tryRunCommand(path.join(binDir, "clean_plugins"), []),
+  );
+}
+
+function spawnDetached(command: string[]): void {
+  const child = Bun.spawn(command, { stdout: "ignore", stderr: "ignore", detached: true });
+  child.unref();
+}
+
+function reloadTmux(configPath: string, pluginsChanged: boolean): ResultAsync<void, Error> {
+  return isTmuxRunning().andThen((running) => {
+    if (!running) {
+      console.log("tmux is not running, so the theme applies on the next start");
+      return okAsync(undefined);
+    }
+
+    if (!pluginsChanged) {
+      return tryRunCommand("tmux", ["source-file", configPath]);
+    }
+
+    console.log("the tmux plugin set changed, so the server restarts");
+    return installTmuxPlugins().andThen(() => {
+      spawnDetached(["bash", "-c", "sleep 1 && tmux kill-server"]);
+      return okAsync(undefined);
+    });
+  });
+}
+
+/**
+ * Applies a tmux config block and reloads tmux. When the plugin set changes, this helper
+ * reinstalls the plugins and restarts the server, so that the old plugin options do not linger.
+ *
+ * @param filePath The path of the tmux config file.
+ * @param content The content to put between the theme-picker markers.
+ * @returns A result that fails when the file system refuses a read or write.
+ */
+export function applyTmuxConfig(filePath: string, content: string): ResultAsync<void, Error> {
+  const startMarker = `# ${BLOCK_START}`;
+  const endMarker = `# ${BLOCK_END}`;
+
+  return readFileIfExists(filePath).andThen((existing) => {
+    const oldPlugins = extractPlugins(matchBlock(existing ?? "", startMarker, endMarker));
+    const newPlugins = extractPlugins(content);
+    const pluginsChanged =
+      oldPlugins.size !== newPlugins.size ||
+      [...newPlugins].some((plugin) => !oldPlugins.has(plugin));
+
+    return patchDelimitedBlock(filePath, "#", content).andThen(() =>
+      reloadTmux(filePath, pluginsChanged),
+    );
   });
 }

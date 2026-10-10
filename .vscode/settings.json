@@ -19,5 +19,6 @@
   "js/ts.tsdk.promptToUseWorkspaceVersion": true,
   "js/ts.tsdk.path": "./node_modules/typescript/bin",
   "js/ts.experimental.useTsgo": true,
-  "debug.javascript.codelens.npmScripts": "never"
+  "debug.javascript.codelens.npmScripts": "never",
+  "rstack.rstest.enable": false
 }

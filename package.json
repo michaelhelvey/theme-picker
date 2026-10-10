@@ -4,6 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "dev": "bun run ./src/index.ts",
+    "install-skill": "bunx skills add ./skills --skill theme-picker -y",
     "prepare": "rs hooks",
     "format": "rs fmt",
     "lint": "rs lint --fix",
@@ -17,5 +19,10 @@
   },
   "peerDependencies": {
     "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "citty": "^0.2.2",
+    "neverthrow": "^8.2.0",
+    "untildify": "^6.0.0"
   }
 }

@@ -18,6 +18,7 @@
   overwhelmingly necessary to explain an otherwise odd decision that would strike the reader as
   wrong at first glance (e.g. a lint ignore).
 - Always use `zod` to parse unknown types, rather than casting.
+- Use neverthrow to accurately encode the source and meaning of errors, do not use try/catch
 
 ## Testing Rules
 

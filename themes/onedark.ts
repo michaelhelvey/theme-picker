@@ -15,9 +15,9 @@ const tmuxConfigPath = path.join(homeDir, ".tmux.conf");
 const neovimColorsPath = path.join(homeDir, ".config", "nvim", "lua", "custom", "colors.lua");
 const herdrConfigPath = path.join(homeDir, ".config", "herdr", "config.toml");
 
-const ghosttyConfig = `font-family = "JetbrainsMono Nerd Font"
+const ghosttyConfig = `font-family = "MonoLisaCode"
 font-thicken = true
-font-size = 18
+font-size = 13
 theme = dark:Atom One Dark,light:Atom One Light`;
 
 const tmuxConfig = `set -g @plugin 'fabioluciano/tmux-powerkit'

@@ -11,6 +11,7 @@ import {
 const homeDir = os.homedir();
 
 const ghosttyConfigPath = path.join(homeDir, ".config", "ghostty", "config");
+const ghosttyDayOwlThemePath = path.join(homeDir, ".config", "ghostty", "themes", "dayowl");
 const tmuxConfigPath = path.join(homeDir, ".tmux.conf");
 const neovimColorsPath = path.join(homeDir, ".config", "nvim", "lua", "custom", "colors.lua");
 const herdrConfigPath = path.join(homeDir, ".config", "herdr", "config.toml");
@@ -18,7 +19,31 @@ const herdrConfigPath = path.join(homeDir, ".config", "herdr", "config.toml");
 const ghosttyConfig = `font-family = "MonoLisaCode"
 font-thicken = true
 font-size = 13
-theme = dark:Night Owl,light:Night Owlish Light`;
+theme = dark:Night Owl,light:dayowl`;
+
+const ghosttyDayOwlTheme = `palette = 0=#000000
+palette = 1=#bb4247
+palette = 2=#357b00
+palette = 3=#936203
+palette = 4=#0171b0
+palette = 5=#825aa9
+palette = 6=#007b5c
+palette = 7=#909090
+palette = 8=#606060
+palette = 9=#c4494d
+palette = 10=#5d7d03
+palette = 11=#9d6804
+palette = 12=#0078bb
+palette = 13=#8961b1
+palette = 14=#038363
+palette = 15=#d1d1d1
+background = #f8f9fa
+foreground = #41464b
+cursor-color = #ca8105
+cursor-text = #f8f9fa
+selection-background = #035bd6
+selection-foreground = #f8f9fa
+`;
 
 const tmuxConfig = `set -g @plugin 'fabioluciano/tmux-powerkit'
 set -g @powerkit_plugins "datetime,git"
@@ -188,27 +213,27 @@ auto_switch = true
 light_name = "tokyo-night-day"
 dark_name = "tokyo-night"
 
-# Light Owl
+# Day Owl
 [theme.custom.light]
-panel_bg = "#fbfbfb"
-sidebar_bg = "#f0f0f0"
-active_row_bg = "#e0e7ea"
-selection_bg = "#d9e2e6"
-surface0 = "#f0f0f0"
-surface1 = "#e0e7ea"
-surface_dim = "#f6f6f6"
-overlay0 = "#989fb1"
-overlay1 = "#90a7b2"
-text = "#403f53"
-subtext0 = "#5f5e72"
-accent = "#4876d6"
-mauve = "#994cc3"
-green = "#08916a"
-yellow = "#daaa01"
-red = "#de3d3b"
-blue = "#4876d6"
-teal = "#0c969b"
-peach = "#c96765"
+panel_bg = "#f8f9fa"
+sidebar_bg = "#f1f4f7"
+active_row_bg = "#dcecff"
+selection_bg = "#dcecff"
+surface0 = "#eef1f4"
+surface1 = "#d8dde3"
+surface_dim = "#f1f4f7"
+overlay0 = "#6d737b"
+overlay1 = "#606060"
+text = "#41464b"
+subtext0 = "#606060"
+accent = "#ca8105"
+mauve = "#825aa9"
+green = "#357b00"
+yellow = "#936203"
+red = "#bb4247"
+blue = "#0171b0"
+teal = "#007b5c"
+peach = "#c4494d"
 
 # Night Owl
 [theme.custom.dark]
@@ -234,10 +259,12 @@ peach = "#f78c6c"`;
 
 /**
  * The mitsuhiko theme. This theme applies the Night Owl colors to Ghostty, tmux, Neovim, and herdr.
+ * In light mode, Ghostty and herdr use the Day Owl colors.
  */
 export default {
   apply() {
-    return applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig)
+    return writeFileContent(ghosttyDayOwlThemePath, ghosttyDayOwlTheme)
+      .andThen(() => applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig))
       .andThen(() => applyTmuxConfig(tmuxConfigPath, tmuxConfig))
       .andThen(() => writeFileContent(neovimColorsPath, neovimColors))
       .andThen(() => applyHerdrConfig(herdrConfigPath, herdrConfig));

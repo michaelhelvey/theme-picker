@@ -37,8 +37,11 @@ bun run ./src/index.ts apply <theme-name>
 Each theme is just a Typescript file that explains how to apply it. So for example,
 `themes/jonhoo.ts` is a Typescript module that says how to write a particular set of neovim color
 configurations to `~/.config/nvim/lua/custom/colors.lua`, and to `~/.config/ghostty/config` etc.
-It's in Typescript so that you can define all sorts of weird rules if you want: some files should be
-symlinked, some should be overwritten, some should be edited with some heuristic, etc.
+Themes use TypeScript so that you can define how to write each config file. `writeFileContent` and
+the config block helpers write through existing symbolic links without removing them. For GNU Stow
+dotfiles, this updates the file in the Stow package and keeps the link. If a link target is missing,
+the write creates it when its parent directory exists. If that parent directory is missing, the
+write returns an error and keeps the link.
 
 ## Add a theme
 

@@ -45,11 +45,16 @@ Use `os.homedir()` or another base path for the target paths. Select the helper 
   file, or appends the block when the file has none. Use it for a file that the user also edits by
   hand, such as a shell or terminal config. Set `commentPrefix` to the comment syntax of the file,
   such as `#`.
-- `writeFileContent(path, content)` replaces a whole file and removes an existing symbolic link
-  first. Use it for a file that the theme fully owns.
+- `writeFileContent(path, content)` replaces the whole file content. It writes through an existing
+  symbolic link without removing the link. Use it for a file that the theme fully owns.
 - `tryRunCommand(command, args)` runs a command and ignores a failure. Use it to reload an
   application after a write.
 - `runCommand(command, args)` is the same, but it returns an error when the command fails.
+
+The file helpers preserve symbolic links, including links that GNU Stow creates. Writes update the
+file in the Stow package. If a link target is missing, the write creates it when its parent
+directory exists. If that parent directory is missing, the write returns an error and keeps the
+link. Do not remove links before a write.
 
 For the common dotfiles apps, `src/theme.ts` also has convenience helpers that patch the block and
 reload the app:

@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
-import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readlink, rm, stat, symlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const repoRoot = path.join(import.meta.dirname, "..", "..");
@@ -76,6 +76,50 @@ describe("theme-picker cli", () => {
       () => false,
     );
     expect(betaFileExists).toEqual(false);
+  });
+
+  it("changes themes through Stow-style links without replacing them", async () => {
+    const homeDir = path.join(themesDir, "home");
+    const dotfilesDir = path.join(homeDir, ".dotfiles");
+    const fixtureThemes = path.join(themesDir, "linked-themes");
+    await mkdir(path.join(homeDir, ".config", "herdr"), { recursive: true });
+    await mkdir(path.join(dotfilesDir, ".config", "herdr"), { recursive: true });
+    await mkdir(fixtureThemes);
+    const configs = [".tmux.conf", ".config/herdr/config.toml"];
+
+    for (const config of configs) {
+      const targetPath = path.join(dotfilesDir, config);
+      const linkPath = path.join(homeDir, config);
+      await writeFile(targetPath, "# user settings\n");
+      await symlink(path.relative(path.dirname(linkPath), targetPath), linkPath);
+    }
+
+    for (const name of ["dark", "light"]) {
+      await writeFile(
+        path.join(fixtureThemes, `${name}.ts`),
+        [
+          `import { patchDelimitedBlock } from ${JSON.stringify(themeHelper)};`,
+          "export default {",
+          `  apply: () => patchDelimitedBlock(${JSON.stringify(path.join(homeDir, ".tmux.conf"))}, "#", "theme = ${name}")`,
+          `    .andThen(() => patchDelimitedBlock(${JSON.stringify(path.join(homeDir, ".config/herdr/config.toml"))}, "#", "theme = ${name}")),`,
+          "};",
+        ].join("\n"),
+      );
+    }
+
+    for (const name of ["dark", "light", "light"]) {
+      const result = await runCli(["apply", name], fixtureThemes);
+      expect(result.exitCode).toBe(0);
+
+      for (const config of configs) {
+        const targetPath = path.join(dotfilesDir, config);
+        const linkPath = path.join(homeDir, config);
+        expect(await readlink(linkPath)).toEqual(path.relative(path.dirname(linkPath), targetPath));
+        expect(await readFile(targetPath, "utf8")).toEqual(
+          `# user settings\n\n# >>> theme-picker >>>\ntheme = ${name}\n# <<< theme-picker <<<\n`,
+        );
+      }
+    }
   });
 
   it("reports an unknown theme and exits with a failure code", async () => {

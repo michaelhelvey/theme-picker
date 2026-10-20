@@ -1,5 +1,5 @@
 import { errAsync, okAsync, ResultAsync } from "neverthrow";
-import { lstat, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
@@ -57,41 +57,21 @@ function readFileIfExists(filePath: string): ResultAsync<string | undefined, Err
   );
 }
 
-function removeIfExists(filePath: string): ResultAsync<void, Error> {
-  return ResultAsync.fromPromise(lstat(filePath), (cause) => cause)
-    .map(() => true)
-    .orElse((cause) =>
-      isNodeError(cause) && cause.code === "ENOENT"
-        ? okAsync(false)
-        : errAsync(new ThemeFileError("read", filePath, { cause })),
-    )
-    .andThen((exists) =>
-      exists
-        ? ResultAsync.fromPromise(
-            rm(filePath, { force: true }),
-            (cause) => new ThemeFileError("remove", filePath, { cause }),
-          ).map(() => undefined)
-        : okAsync(undefined),
-    );
-}
-
 /**
- * Writes content to a file, replacing an existing file or symbolic link. This helper creates the
- * parent directory when it is missing.
+ * Writes content to a file through any existing symbolic link without removing the link.
+ * Creates the parent directory of filePath when it is missing, but not the parent of a link target.
  *
  * @param filePath The path to write.
  * @param content The content to write.
- * @returns A result that fails when the file system refuses a read, write, or remove.
+ * @returns A result that fails when the file system refuses a write.
  */
 export function writeFileContent(filePath: string, content: string): ResultAsync<void, Error> {
-  return ensureParentDir(filePath)
-    .andThen(() => removeIfExists(filePath))
-    .andThen(() =>
-      ResultAsync.fromPromise(
-        writeFile(filePath, content),
-        (cause) => new ThemeFileError("write", filePath, { cause }),
-      ).map(() => undefined),
-    );
+  return ensureParentDir(filePath).andThen(() =>
+    ResultAsync.fromPromise(
+      writeFile(filePath, content),
+      (cause) => new ThemeFileError("write", filePath, { cause }),
+    ).map(() => undefined),
+  );
 }
 
 function mergeDelimitedBlock(

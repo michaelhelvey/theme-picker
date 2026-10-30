@@ -167,16 +167,129 @@ const GHOSTTY_RELOAD_SCRIPT =
   'Configuration" of menu "Ghostty" of menu bar item "Ghostty" of menu bar 1';
 
 /**
- * Applies a Ghostty config block and asks Ghostty to reload.
+ * The Rex settings that theme-picker copies from a Ghostty config block.
+ */
+export interface RexSettings {
+  /** The Ghostty theme names, one for each appearance in a `dark:A,light:B` value. */
+  readonly themeNames: string[];
+  /** The terminal font family. */
+  readonly fontFamily?: string;
+  /** The terminal font size in points. */
+  readonly fontSize?: number;
+}
+
+/**
+ * Reads the Rex settings from Ghostty config content.
+ *
+ * @param content The Ghostty config content.
+ * @returns The theme names and font settings that the content sets.
+ */
+export function parseRexSettings(content: string): RexSettings {
+  const values = new Map<string, string>();
+  for (const line of content.split("\n")) {
+    const match = /^\s*([\w-]+)\s*=\s*(.*?)\s*$/.exec(line);
+    if (match?.[1] !== undefined && match[2] !== undefined) {
+      values.set(match[1], match[2].replace(/^"(.*)"$/, "$1"));
+    }
+  }
+
+  const themeNames = (values.get("theme") ?? "")
+    .split(",")
+    .map((theme) => theme.replace(/^\s*(dark|light):/, "").trim())
+    .filter((theme) => theme !== "");
+  const fontSize = Number(values.get("font-size"));
+
+  return {
+    themeNames,
+    fontFamily: values.get("font-family"),
+    fontSize: Number.isFinite(fontSize) && fontSize > 0 ? fontSize : undefined,
+  };
+}
+
+const GHOSTTY_THEME_DIRS = [
+  path.join(os.homedir(), ".config", "ghostty", "themes"),
+  "/Applications/Ghostty.app/Contents/Resources/ghostty/themes",
+];
+
+function findGhosttyTheme(name: string): ResultAsync<string | undefined, never> {
+  const candidates = GHOSTTY_THEME_DIRS.map((dir) => path.join(dir, name));
+  return ResultAsync.fromSafePromise(
+    Promise.all(candidates.map((candidate) => Bun.file(candidate).exists())).then((found) =>
+      candidates.find((_, index) => found[index]),
+    ),
+  );
+}
+
+function importRexTheme(name: string): ResultAsync<void, never> {
+  return findGhosttyTheme(name).andThen((themePath) => {
+    if (themePath === undefined) {
+      console.warn(`Warning: Could not find the Ghostty theme '${name}' to import into Rex`);
+      return okAsync(undefined);
+    }
+
+    return tryRunCommand("rex", [
+      "--autostart=false",
+      "do",
+      "client.theme.import",
+      `path=${themePath}`,
+    ]);
+  });
+}
+
+const REX_DEFAULTS_DOMAIN = "com.superlogical.rex";
+
+/**
+ * Applies the theme and font of Ghostty config content to Rex. Rex imports each Ghostty theme and
+ * puts it in the slot for its appearance. Rex must have Remote Control on to accept the import.
+ * Rex reads the font settings when it starts.
+ *
+ * @param content The Ghostty config content.
+ * @returns A result that always succeeds. A failed step only writes a warning.
+ */
+export function applyRexConfig(content: string): ResultAsync<void, never> {
+  const { themeNames, fontFamily, fontSize } = parseRexSettings(content);
+
+  return themeNames
+    .reduce<ResultAsync<void, never>>(
+      (result, name) => result.andThen(() => importRexTheme(name)),
+      okAsync(undefined),
+    )
+    .andThen(() =>
+      fontFamily === undefined
+        ? okAsync(undefined)
+        : tryRunCommand("defaults", [
+            "write",
+            REX_DEFAULTS_DOMAIN,
+            "Workspace.terminalFontName",
+            "-string",
+            fontFamily,
+          ]),
+    )
+    .andThen(() =>
+      fontSize === undefined
+        ? okAsync(undefined)
+        : tryRunCommand("defaults", [
+            "write",
+            REX_DEFAULTS_DOMAIN,
+            "Workspace.terminalFontPointSize",
+            "-float",
+            String(fontSize),
+          ]),
+    );
+}
+
+/**
+ * Applies a Ghostty config block, asks Ghostty to reload, and applies the same theme and font to
+ * Rex.
  *
  * @param filePath The path of the Ghostty config file.
  * @param content The content to put between the theme-picker markers.
  * @returns A result that fails when the file system refuses a read or write.
  */
 export function applyGhosttyConfig(filePath: string, content: string): ResultAsync<void, Error> {
-  return patchDelimitedBlock(filePath, "#", content).andThen(() =>
-    tryRunCommand("osascript", ["-e", GHOSTTY_RELOAD_SCRIPT]),
-  );
+  return patchDelimitedBlock(filePath, "#", content)
+    .andThen(() => tryRunCommand("osascript", ["-e", GHOSTTY_RELOAD_SCRIPT]))
+    .andThen(() => applyRexConfig(content));
 }
 
 /**

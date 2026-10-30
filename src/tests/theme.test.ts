@@ -13,7 +13,7 @@ import {
 } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { patchDelimitedBlock, writeFileContent } from "../theme";
+import { parseRexSettings, patchDelimitedBlock, writeFileContent } from "../theme";
 
 describe("patchDelimitedBlock", () => {
   let tmpDir: string;
@@ -164,5 +164,34 @@ describe("writeFileContent", () => {
     expect(result.isOk()).toBe(true);
     expect(await readFile(filePath, "utf8")).toEqual("new");
     expect((await stat(filePath)).mode & 0o777).toBe(0o600);
+  });
+});
+
+describe("parseRexSettings", () => {
+  it("reads both themes of a dark and light pair and the font", () => {
+    const settings = parseRexSettings(
+      [
+        'font-family = "MonoLisaCode"',
+        "font-thicken = true",
+        "font-size = 13",
+        "theme = dark:Night Owl,light:dayowl",
+      ].join("\n"),
+    );
+
+    expect(settings).toEqual({
+      themeNames: ["Night Owl", "dayowl"],
+      fontFamily: "MonoLisaCode",
+      fontSize: 13,
+    });
+  });
+
+  it("reads a single theme and leaves out the settings the content does not set", () => {
+    const settings = parseRexSettings("theme = Gruber Darker\nfont-size = big");
+
+    expect(settings).toEqual({
+      themeNames: ["Gruber Darker"],
+      fontFamily: undefined,
+      fontSize: undefined,
+    });
   });
 });

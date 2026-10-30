@@ -59,7 +59,9 @@ link. Do not remove links before a write.
 For the common dotfiles apps, `src/theme.ts` also has convenience helpers that patch the block and
 reload the app:
 
-- `applyGhosttyConfig(path, content)` patches the Ghostty config and asks Ghostty to reload.
+- `applyGhosttyConfig(path, content)` patches the Ghostty config and asks Ghostty to reload. It also
+  imports the `theme` value into Rex and copies `font-family` and `font-size` to Rex. Use a theme
+  name from Ghostty or from `~/.config/ghostty/themes`, so that Rex can find the theme file.
 - `applyTmuxConfig(path, content)` patches the tmux config and reloads tmux. It also reinstalls the
   plugins and restarts the server when the plugin set changes.
 - `applyHerdrConfig(path, content)` patches the herdr config and asks herdr to reload.

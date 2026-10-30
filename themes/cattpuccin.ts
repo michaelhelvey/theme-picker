@@ -15,10 +15,10 @@ const tmuxConfigPath = path.join(homeDir, ".tmux.conf");
 const neovimColorsPath = path.join(homeDir, ".config", "nvim", "lua", "custom", "colors.lua");
 const herdrConfigPath = path.join(homeDir, ".config", "herdr", "config.toml");
 
-const ghosttyConfig = `font-family = "SauceCodePro Nerd Font"
+const ghosttyConfig = `font-family = "MonoLisaCode"
 font-thicken = true
-font-size = 18
-theme = Catppuccin Mocha`;
+font-size = 13
+theme = dark:Catppuccin Mocha,light:Catppuccin Latte`;
 
 const tmuxConfig = `set -g @plugin 'fabioluciano/tmux-powerkit'
 set -g @powerkit_plugins "datetime,git"
@@ -30,8 +30,13 @@ set -g @powerkit_theme_variant "mocha"
 set -g @powerkit_separator_style "normal"
 set -g @powerkit_edge_separator_style "normal"`;
 
-const neovimColors = `-- Theme: cattpuccin (Catppuccin Mocha)
+const neovimColors = `-- Theme: cattpuccin (Catppuccin Mocha / Catppuccin Latte)
 -- Managed by theme-picker. Do not edit manually.
+--
+-- The theme follows 'background'. Before Neovim loads the config, it asks the terminal for its
+-- background color (OSC 11). Ghostty follows the macOS appearance, thus 'background' is correct at
+-- startup. Dark uses Catppuccin Mocha. Light uses Catppuccin Latte. If 'background' changes later,
+-- the theme loads again.
 return {
   {
     'catppuccin/nvim',
@@ -40,10 +45,19 @@ return {
     priority = 1000,
     config = function()
       require('catppuccin').setup({
-        flavour = 'mocha',
+        flavour = 'auto',
+        background = { light = 'latte', dark = 'mocha' },
       })
-      vim.o.background = 'dark'
-      vim.cmd([[colorscheme catppuccin-mocha]])
+
+      local function load()
+        vim.cmd.colorscheme(vim.o.background == 'light' and 'catppuccin-latte' or 'catppuccin-mocha')
+        if package.loaded.lualine then
+          require('lualine').setup({ options = { theme = 'auto' } })
+        end
+      end
+
+      load()
+      vim.api.nvim_create_autocmd('OptionSet', { pattern = 'background', callback = load })
     end,
   },
   {
@@ -55,11 +69,14 @@ return {
 }`;
 
 const herdrConfig = `[theme]
-name = "catppuccin"`;
+name = "catppuccin"
+auto_switch = true
+dark_name = "catppuccin"
+light_name = "catppuccin-latte"`;
 
 /**
- * The cattpuccin theme. This theme applies the Catppuccin Mocha colors to Ghostty, tmux, Neovim,
- * and herdr.
+ * The cattpuccin theme. This theme applies the Catppuccin Mocha / Catppuccin Latte colors to
+ * Ghostty, tmux, Neovim, and herdr.
  */
 export default {
   apply() {

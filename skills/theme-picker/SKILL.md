@@ -59,11 +59,13 @@ link. Do not remove links before a write.
 For the common dotfiles apps, `src/theme.ts` also has convenience helpers that patch the block and
 reload the app:
 
-- `applyGhosttyConfig(path, content)` patches the Ghostty config and asks Ghostty to reload. It also
-  imports the `theme` value into Rex and copies `font-family` and `font-size` to Rex and Herdr. Use
-  a theme name from Ghostty or from `~/.config/ghostty/themes`, so that Rex can find the theme file.
-  Herdr uses the local `MonoLisaCode Herdr` family for MonoLisaCode when all four face files are
-  present in `~/.config/herdr-app/fonts/`. Other fonts are copied without a name change.
+- `applyGhosttyConfig(path, content)` patches the Ghostty config and asks a running Ghostty to
+  reload. A closed Ghostty reads the config on its next start. Live reload needs macOS Accessibility
+  and Automation access for the calling terminal. It also imports the `theme` value into Rex and
+  copies `font-family` and `font-size` to Rex and Herdr. Use a theme name from Ghostty or from
+  `~/.config/ghostty/themes`, so that Rex can find the theme file. Herdr uses the local
+  `MonoLisaCode Herdr` family for MonoLisaCode when all four face files are present in
+  `~/.config/herdr-app/fonts/`. Other fonts are copied without a name change.
 - `applyTmuxConfig(path, content)` patches the tmux config and reloads tmux. It also reinstalls the
   plugins and restarts the server when the plugin set changes.
 - `applyHerdrAppTheme(theme)` writes the herdr-app theme files and selects them in
@@ -104,7 +106,8 @@ Template:
     } satisfies ThemeModule;
 
 Add a reload only when you need it. `tryRunCommand` prints a warning and continues when the
-application is not running.
+application is not running. Warnings include the command error output. Rex imports need a running
+Rex app. Set `REX_CLIENT` when more than one app is connected.
 
 ## Step 3: Check the theme
 

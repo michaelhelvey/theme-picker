@@ -43,6 +43,12 @@ dotfiles, this updates the file in the Stow package and keeps the link. If a lin
 the write creates it when its parent directory exists. If that parent directory is missing, the
 write returns an error and keeps the link.
 
+Ghostty reloads only when it is running. A closed Ghostty reads the config on its next start. Live
+reload uses macOS UI automation. If macOS denies access, allow the calling terminal under System
+Settings > Privacy & Security > Accessibility and Automation. Command warnings include the error
+output, so Rex connection, client selection, and import errors remain visible. Rex theme imports
+need a running Rex app. Set `REX_CLIENT` to select an app when more than one is connected.
+
 The Ghostty font family and size also apply to Herdr. Herdr keeps its own zoom setting. For
 MonoLisaCode, Herdr uses `MonoLisaCode Herdr` when its Regular, Italic, Bold, and BoldItalic files
 are present in `~/.config/herdr-app/fonts/` as `MonoLisaCodeHerdr-<face>.ttf`. Otherwise, it uses

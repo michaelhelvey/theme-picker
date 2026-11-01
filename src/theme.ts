@@ -33,7 +33,12 @@ export class ThemeFileError extends Error {
  */
 export type ThemeCommandError =
   | { readonly type: "CommandStartFailed"; readonly command: string; readonly cause: unknown }
-  | { readonly type: "CommandExitFailed"; readonly command: string; readonly exitCode: number };
+  | {
+      readonly type: "CommandExitFailed";
+      readonly command: string;
+      readonly exitCode: number;
+      readonly stderr: string;
+    };
 
 function isNodeError(error: unknown): error is NodeJS.ErrnoException {
   return error instanceof Error && "code" in error;
@@ -114,10 +119,11 @@ export function patchDelimitedBlock(
   );
 }
 
-function spawnAndWait(command: string, args: string[]): Promise<number> {
-  return Promise.resolve().then(() => {
-    const child = Bun.spawn([command, ...args], { stdout: "ignore", stderr: "ignore" });
-    return child.exited;
+function spawnAndWait(command: string, args: string[]) {
+  return Promise.resolve().then(async () => {
+    const child = Bun.spawn([command, ...args], { stdout: "ignore", stderr: "pipe" });
+    const [exitCode, stderr] = await Promise.all([child.exited, new Response(child.stderr).text()]);
+    return { exitCode, stderr: stderr.trim() };
   });
 }
 
@@ -133,19 +139,19 @@ export function runCommand(command: string, args: string[]): ResultAsync<void, T
     type: "CommandStartFailed",
     command,
     cause,
-  })).andThen((exitCode): ResultAsync<void, ThemeCommandError> =>
+  })).andThen(({ exitCode, stderr }): ResultAsync<void, ThemeCommandError> =>
     exitCode === 0
       ? okAsync(undefined)
-      : errAsync({ type: "CommandExitFailed", command, exitCode }),
+      : errAsync({ type: "CommandExitFailed", command, exitCode, stderr }),
   );
 }
 
 function describeCommandError(error: ThemeCommandError): string {
   switch (error.type) {
     case "CommandStartFailed":
-      return `Could not start command '${error.command}'`;
+      return `Could not start command '${error.command}': ${String(error.cause)}`;
     case "CommandExitFailed":
-      return `Command '${error.command}' exited with code ${error.exitCode}`;
+      return `Command '${error.command}' exited with code ${error.exitCode}${error.stderr === "" ? "" : `: ${error.stderr}`}`;
   }
 }
 
@@ -163,9 +169,9 @@ export function tryRunCommand(command: string, args: string[]): ResultAsync<void
   });
 }
 
-const GHOSTTY_RELOAD_SCRIPT =
-  'tell application "System Events" to tell process "Ghostty" to click menu item "Reload ' +
-  'Configuration" of menu "Ghostty" of menu bar item "Ghostty" of menu bar 1';
+const GHOSTTY_RELOAD_SCRIPT = `if application "Ghostty" is running then
+  tell application "System Events" to tell process "Ghostty" to click menu item "Reload Configuration" of menu "Ghostty" of menu bar item "Ghostty" of menu bar 1
+end if`;
 
 /**
  * The Rex settings that theme-picker copies from a Ghostty config block.
@@ -280,8 +286,9 @@ export function applyRexConfig(content: string): ResultAsync<void, never> {
 }
 
 /**
- * Applies a Ghostty config block, asks Ghostty to reload, and applies the same theme and font to
- * Rex. It also copies the font to Herdr.
+ * Applies a Ghostty config block, asks a running Ghostty to reload, and applies the same theme
+ * and font to Rex. A closed Ghostty reads the config on its next start. It also copies the font
+ * to Herdr.
  *
  * @param filePath The path of the Ghostty config file.
  * @param content The content to put between the theme-picker markers.

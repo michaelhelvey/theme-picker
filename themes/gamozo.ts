@@ -1,7 +1,13 @@
 import os from "node:os";
 import path from "node:path";
 import type { ThemeModule } from "../src/config";
-import { applyGhosttyConfig, applyTmuxConfig, writeFileContent } from "../src/theme";
+import type { HerdrAppTheme } from "../src/theme";
+import {
+  applyGhosttyConfig,
+  applyHerdrAppTheme,
+  applyTmuxConfig,
+  writeFileContent,
+} from "../src/theme";
 
 const homeDir = os.homedir();
 
@@ -36,14 +42,42 @@ return {
   },
 }`;
 
+const herdrAppTheme = {
+  dark: {
+    background: "#000000",
+    foreground: "#ffffff",
+    selection: "#1b1b1b",
+    cursor: "#ffffff",
+    ansi: [
+      "#000000",
+      "#800000",
+      "#008000",
+      "#808000",
+      "#000080",
+      "#800080",
+      "#008080",
+      "#c0c0c0",
+      "#808080",
+      "#ff0000",
+      "#00ff00",
+      "#ffff00",
+      "#0000ff",
+      "#ff00ff",
+      "#00ffff",
+      "#ffffff",
+    ],
+  },
+} satisfies HerdrAppTheme;
+
 /**
  * The gamozo theme. This theme applies the Retro ANSI-on-black based on torte with amber comments
- * colors to Ghostty, tmux, and Neovim.
+ * colors to Ghostty, tmux, Neovim, and herdr-app.
  */
 export default {
   apply() {
     return applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig)
       .andThen(() => applyTmuxConfig(tmuxConfigPath, tmuxConfig))
-      .andThen(() => writeFileContent(neovimColorsPath, neovimColors));
+      .andThen(() => writeFileContent(neovimColorsPath, neovimColors))
+      .andThen(() => applyHerdrAppTheme(herdrAppTheme));
   },
 } satisfies ThemeModule;

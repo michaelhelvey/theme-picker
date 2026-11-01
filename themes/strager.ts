@@ -1,9 +1,10 @@
 import os from "node:os";
 import path from "node:path";
 import type { ThemeModule } from "../src/config";
+import type { HerdrAppTheme } from "../src/theme";
 import {
   applyGhosttyConfig,
-  applyHerdrConfig,
+  applyHerdrAppTheme,
   applyTmuxConfig,
   writeFileContent,
 } from "../src/theme";
@@ -13,7 +14,6 @@ const homeDir = os.homedir();
 const ghosttyConfigPath = path.join(homeDir, ".config", "ghostty", "config");
 const tmuxConfigPath = path.join(homeDir, ".tmux.conf");
 const neovimColorsPath = path.join(homeDir, ".config", "nvim", "lua", "custom", "colors.lua");
-const herdrConfigPath = path.join(homeDir, ".config", "herdr", "config.toml");
 
 const ghosttyConfig = `font-family = "ComicCodeLigatures Nerd Font"
 font-thicken = true
@@ -62,18 +62,42 @@ return {
 	},
 }`;
 
-const herdrConfig = `[theme]
-name = "solarized"`;
+const herdrAppTheme = {
+  dark: {
+    background: "#061822",
+    foreground: "#d0e8e9",
+    selection: "#003748",
+    cursor: "#f34b00",
+    ansi: [
+      "#002831",
+      "#d11c24",
+      "#6cbe6c",
+      "#a57706",
+      "#2176c7",
+      "#c61c6f",
+      "#259286",
+      "#eae3cb",
+      "#006488",
+      "#f5163b",
+      "#51ef84",
+      "#b27e28",
+      "#178ec8",
+      "#e24d8e",
+      "#00b39e",
+      "#fcf4dc",
+    ],
+  },
+} satisfies HerdrAppTheme;
 
 /**
  * The strager theme. This theme applies the Dark blue-gray background, multi-color syntax colors to
- * Ghostty, tmux, Neovim, and herdr.
+ * Ghostty, tmux, Neovim, and herdr-app.
  */
 export default {
   apply() {
     return applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig)
       .andThen(() => applyTmuxConfig(tmuxConfigPath, tmuxConfig))
       .andThen(() => writeFileContent(neovimColorsPath, neovimColors))
-      .andThen(() => applyHerdrConfig(herdrConfigPath, herdrConfig));
+      .andThen(() => applyHerdrAppTheme(herdrAppTheme));
   },
 } satisfies ThemeModule;

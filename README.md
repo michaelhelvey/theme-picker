@@ -43,6 +43,16 @@ dotfiles, this updates the file in the Stow package and keeps the link. If a lin
 the write creates it when its parent directory exists. If that parent directory is missing, the
 write returns an error and keeps the link.
 
+The Ghostty font family and size also apply to Herdr. Herdr keeps its own zoom setting. For
+MonoLisaCode, Herdr uses `MonoLisaCode Herdr` when its Regular, Italic, Bold, and BoldItalic files
+are present in `~/.config/herdr-app/fonts/` as `MonoLisaCodeHerdr-<face>.ttf`. Otherwise, it uses
+the original font family.
+
+Each theme also writes a herdr-app theme in `~/.config/herdr-app/themes/` and selects it in
+`~/.config/herdr-app/settings.json`. A theme with a light and a dark palette writes
+`theme-picker-light.json` and `theme-picker-dark.json`, so the herdr-app follows the system
+appearance. A theme with one palette writes `theme-picker.json`.
+
 ## Add a theme
 
 A theme is one Typescript module at `themes/<name>.ts`. The module default-exports an object with an

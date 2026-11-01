@@ -1,9 +1,10 @@
 import os from "node:os";
 import path from "node:path";
 import type { ThemeModule } from "../src/config";
+import type { HerdrAppTheme } from "../src/theme";
 import {
   applyGhosttyConfig,
-  applyHerdrConfig,
+  applyHerdrAppTheme,
   applyTmuxConfig,
   writeFileContent,
 } from "../src/theme";
@@ -13,7 +14,6 @@ const homeDir = os.homedir();
 const ghosttyConfigPath = path.join(homeDir, ".config", "ghostty", "config");
 const tmuxConfigPath = path.join(homeDir, ".tmux.conf");
 const neovimColorsPath = path.join(homeDir, ".config", "nvim", "lua", "custom", "colors.lua");
-const herdrConfigPath = path.join(homeDir, ".config", "herdr", "config.toml");
 
 const ghosttyConfig = `font-family = "Fira Code"
 font-thicken = true
@@ -81,18 +81,42 @@ return {
   },
 }`;
 
-const herdrConfig = `[theme]
-name = "tokyo-night"`;
+const herdrAppTheme = {
+  dark: {
+    background: "#1a1b26",
+    foreground: "#c0caf5",
+    selection: "#283457",
+    cursor: "#c0caf5",
+    ansi: [
+      "#15161e",
+      "#f7768e",
+      "#9ece6a",
+      "#e0af68",
+      "#7aa2f7",
+      "#bb9af7",
+      "#7dcfff",
+      "#a9b1d6",
+      "#414868",
+      "#f7768e",
+      "#9ece6a",
+      "#e0af68",
+      "#7aa2f7",
+      "#bb9af7",
+      "#7dcfff",
+      "#c0caf5",
+    ],
+  },
+} satisfies HerdrAppTheme;
 
 /**
  * The beginbot theme. This theme applies the Tokyo Night with transparent background colors to
- * Ghostty, tmux, Neovim, and herdr.
+ * Ghostty, tmux, Neovim, and herdr-app.
  */
 export default {
   apply() {
     return applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig)
       .andThen(() => applyTmuxConfig(tmuxConfigPath, tmuxConfig))
       .andThen(() => writeFileContent(neovimColorsPath, neovimColors))
-      .andThen(() => applyHerdrConfig(herdrConfigPath, herdrConfig));
+      .andThen(() => applyHerdrAppTheme(herdrAppTheme));
   },
 } satisfies ThemeModule;

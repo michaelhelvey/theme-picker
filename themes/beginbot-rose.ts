@@ -1,9 +1,10 @@
 import os from "node:os";
 import path from "node:path";
 import type { ThemeModule } from "../src/config";
+import type { HerdrAppTheme } from "../src/theme";
 import {
   applyGhosttyConfig,
-  applyHerdrConfig,
+  applyHerdrAppTheme,
   applyTmuxConfig,
   writeFileContent,
 } from "../src/theme";
@@ -13,7 +14,6 @@ const homeDir = os.homedir();
 const ghosttyConfigPath = path.join(homeDir, ".config", "ghostty", "config");
 const tmuxConfigPath = path.join(homeDir, ".tmux.conf");
 const neovimColorsPath = path.join(homeDir, ".config", "nvim", "lua", "custom", "colors.lua");
-const herdrConfigPath = path.join(homeDir, ".config", "herdr", "config.toml");
 
 const ghosttyConfig = `font-family = "Fira Code"
 font-thicken = true
@@ -84,18 +84,42 @@ return {
   },
 }`;
 
-const herdrConfig = `[theme]
-name = "rose-pine"`;
+const herdrAppTheme = {
+  dark: {
+    background: "#191724",
+    foreground: "#e0def4",
+    selection: "#403d52",
+    cursor: "#e0def4",
+    ansi: [
+      "#26233a",
+      "#eb6f92",
+      "#31748f",
+      "#f6c177",
+      "#9ccfd8",
+      "#c4a7e7",
+      "#ebbcba",
+      "#e0def4",
+      "#6e6a86",
+      "#eb6f92",
+      "#31748f",
+      "#f6c177",
+      "#9ccfd8",
+      "#c4a7e7",
+      "#ebbcba",
+      "#e0def4",
+    ],
+  },
+} satisfies HerdrAppTheme;
 
 /**
  * The beginbot-rose theme. This theme applies the Rosé Pine with transparent background colors to
- * Ghostty, tmux, Neovim, and herdr.
+ * Ghostty, tmux, Neovim, and herdr-app.
  */
 export default {
   apply() {
     return applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig)
       .andThen(() => applyTmuxConfig(tmuxConfigPath, tmuxConfig))
       .andThen(() => writeFileContent(neovimColorsPath, neovimColors))
-      .andThen(() => applyHerdrConfig(herdrConfigPath, herdrConfig));
+      .andThen(() => applyHerdrAppTheme(herdrAppTheme));
   },
 } satisfies ThemeModule;

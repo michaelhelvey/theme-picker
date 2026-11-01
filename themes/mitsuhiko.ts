@@ -1,9 +1,10 @@
 import os from "node:os";
 import path from "node:path";
 import type { ThemeModule } from "../src/config";
+import type { HerdrAppTheme } from "../src/theme";
 import {
   applyGhosttyConfig,
-  applyHerdrConfig,
+  applyHerdrAppTheme,
   applyTmuxConfig,
   writeFileContent,
 } from "../src/theme";
@@ -14,7 +15,6 @@ const ghosttyConfigPath = path.join(homeDir, ".config", "ghostty", "config");
 const ghosttyDayOwlThemePath = path.join(homeDir, ".config", "ghostty", "themes", "dayowl");
 const tmuxConfigPath = path.join(homeDir, ".tmux.conf");
 const neovimColorsPath = path.join(homeDir, ".config", "nvim", "lua", "custom", "colors.lua");
-const herdrConfigPath = path.join(homeDir, ".config", "herdr", "config.toml");
 
 const ghosttyConfig = `font-family = "MonoLisaCode"
 font-thicken = true
@@ -206,60 +206,60 @@ return {
   },
 }`;
 
-const herdrConfig = `[theme]
-# herdr has no Night Owl theme. Use Tokyo Night as the base and set the Night Owl colors on top.
-name = "tokyo-night"
-auto_switch = true
-light_name = "tokyo-night-day"
-dark_name = "tokyo-night"
-
-# Day Owl
-[theme.custom.light]
-panel_bg = "#f8f9fa"
-sidebar_bg = "#f1f4f7"
-active_row_bg = "#dcecff"
-selection_bg = "#dcecff"
-surface0 = "#eef1f4"
-surface1 = "#d8dde3"
-surface_dim = "#f1f4f7"
-overlay0 = "#6d737b"
-overlay1 = "#606060"
-text = "#41464b"
-subtext0 = "#606060"
-accent = "#ca8105"
-mauve = "#825aa9"
-green = "#357b00"
-yellow = "#936203"
-red = "#bb4247"
-blue = "#0171b0"
-teal = "#007b5c"
-peach = "#c4494d"
-
-# Night Owl
-[theme.custom.dark]
-panel_bg = "#011627"
-sidebar_bg = "#01111d"
-active_row_bg = "#0b2942"
-selection_bg = "#1d3b53"
-surface0 = "#0b2942"
-surface1 = "#122d42"
-surface_dim = "#010d18"
-overlay0 = "#4b6479"
-overlay1 = "#5f7e97"
-text = "#d6deeb"
-subtext0 = "#a6b3c4"
-accent = "#82aaff"
-mauve = "#c792ea"
-green = "#22da6e"
-yellow = "#ffeb95"
-red = "#ef5350"
-blue = "#82aaff"
-teal = "#7fdbca"
-peach = "#f78c6c"`;
+const herdrAppTheme = {
+  dark: {
+    background: "#011627",
+    foreground: "#d6deeb",
+    selection: "#5f7e97",
+    cursor: "#7e57c2",
+    ansi: [
+      "#011627",
+      "#ef5350",
+      "#22da6e",
+      "#addb67",
+      "#82aaff",
+      "#c792ea",
+      "#21c7a8",
+      "#ffffff",
+      "#575656",
+      "#ef5350",
+      "#22da6e",
+      "#ffeb95",
+      "#82aaff",
+      "#c792ea",
+      "#7fdbca",
+      "#ffffff",
+    ],
+  },
+  light: {
+    background: "#f8f9fa",
+    foreground: "#41464b",
+    selection: "#035bd6",
+    cursor: "#ca8105",
+    ansi: [
+      "#000000",
+      "#bb4247",
+      "#357b00",
+      "#936203",
+      "#0171b0",
+      "#825aa9",
+      "#007b5c",
+      "#909090",
+      "#606060",
+      "#c4494d",
+      "#5d7d03",
+      "#9d6804",
+      "#0078bb",
+      "#8961b1",
+      "#038363",
+      "#d1d1d1",
+    ],
+  },
+} satisfies HerdrAppTheme;
 
 /**
- * The mitsuhiko theme. This theme applies the Night Owl colors to Ghostty, tmux, Neovim, and herdr.
- * In light mode, Ghostty and herdr use the Day Owl colors.
+ * The mitsuhiko theme. This theme applies the Night Owl colors to Ghostty, tmux, Neovim, and
+ * herdr-app. In light mode, Ghostty and herdr-app use the Day Owl colors.
  */
 export default {
   apply() {
@@ -267,6 +267,6 @@ export default {
       .andThen(() => applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig))
       .andThen(() => applyTmuxConfig(tmuxConfigPath, tmuxConfig))
       .andThen(() => writeFileContent(neovimColorsPath, neovimColors))
-      .andThen(() => applyHerdrConfig(herdrConfigPath, herdrConfig));
+      .andThen(() => applyHerdrAppTheme(herdrAppTheme));
   },
 } satisfies ThemeModule;

@@ -60,11 +60,20 @@ For the common dotfiles apps, `src/theme.ts` also has convenience helpers that p
 reload the app:
 
 - `applyGhosttyConfig(path, content)` patches the Ghostty config and asks Ghostty to reload. It also
-  imports the `theme` value into Rex and copies `font-family` and `font-size` to Rex. Use a theme
-  name from Ghostty or from `~/.config/ghostty/themes`, so that Rex can find the theme file.
+  imports the `theme` value into Rex and copies `font-family` and `font-size` to Rex and Herdr. Use
+  a theme name from Ghostty or from `~/.config/ghostty/themes`, so that Rex can find the theme file.
+  Herdr uses the local `MonoLisaCode Herdr` family for MonoLisaCode when all four face files are
+  present in `~/.config/herdr-app/fonts/`. Other fonts are copied without a name change.
 - `applyTmuxConfig(path, content)` patches the tmux config and reloads tmux. It also reinstalls the
   plugins and restarts the server when the plugin set changes.
-- `applyHerdrConfig(path, content)` patches the herdr config and asks herdr to reload.
+- `applyHerdrAppTheme(theme)` writes the herdr-app theme files and selects them in
+  `~/.config/herdr-app/settings.json`. It keeps the other settings and writes through symbolic
+  links. A theme with a `light` palette writes `theme-picker-light.json` and
+  `theme-picker-dark.json`. A theme with only a `dark` palette writes `theme-picker.json`. The
+  helper then runs `herdr-app do app.theme` for each file, so the open window shows the new colors
+  on the current layout.
+- `writeHerdrAppTheme(configDir, theme)` does the file work of `applyHerdrAppTheme` without a
+  running app. Use it in tests with a scratch folder.
 
 Use these when the target is one of those apps. Use `patchDelimitedBlock` and `tryRunCommand` for
 any other file.

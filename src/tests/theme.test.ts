@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from "bun:test";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import {
   chmod,
   lstat,
@@ -13,7 +13,14 @@ import {
 } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { parseRexSettings, patchDelimitedBlock, writeFileContent } from "../theme";
+import type { HerdrAppPalette } from "../theme";
+import {
+  parseRexSettings,
+  patchDelimitedBlock,
+  writeFileContent,
+  writeHerdrAppTheme,
+  writeHerdrAppFont,
+} from "../theme";
 
 describe("patchDelimitedBlock", () => {
   let tmpDir: string;
@@ -193,5 +200,175 @@ describe("parseRexSettings", () => {
       fontFamily: undefined,
       fontSize: undefined,
     });
+  });
+});
+
+const STANDARD_ANSI = [
+  "#000000",
+  "#800000",
+  "#008000",
+  "#808000",
+  "#000080",
+  "#800080",
+  "#008080",
+  "#c0c0c0",
+  "#808080",
+  "#ff0000",
+  "#00ff00",
+  "#ffff00",
+  "#0000ff",
+  "#ff00ff",
+  "#00ffff",
+  "#ffffff",
+];
+
+function makePalette(background: string, foreground: string): HerdrAppPalette {
+  return {
+    background,
+    foreground,
+    selection: "#333333",
+    cursor: foreground,
+    ansi: STANDARD_ANSI,
+  };
+}
+
+describe("writeHerdrAppTheme", () => {
+  it("copies font settings through a Stow link without changing zoom or colors", async () => {
+    const directory = await mkdtemp(path.join(os.tmpdir(), "herdr-font-"));
+    const target = path.join(directory, "tracked.json");
+    const link = path.join(directory, "settings.json");
+    await writeFile(target, JSON.stringify({ zoom: 0.9, font: "old", theme: "moss" }));
+    await symlink(target, link);
+    const result = await writeHerdrAppFont(
+      'font-family = "MonoLisaCode"\nfont-size = 13',
+      directory,
+    );
+    expect(result.isOk()).toBe(true);
+    expect((await lstat(link)).isSymbolicLink()).toBe(true);
+    expect(JSON.parse(await readFile(target, "utf8"))).toEqual({
+      zoom: 0.9,
+      font: "MonoLisaCode",
+      font_size: 13,
+      theme: "moss",
+    });
+    await writeHerdrAppFont("font-size = 15", directory);
+    expect(JSON.parse(await readFile(target, "utf8"))).toMatchObject({
+      font: "MonoLisaCode",
+      font_size: 15,
+    });
+    await rm(directory, { recursive: true, force: true });
+  });
+
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    tmpDir = await mkdtemp(path.join(os.tmpdir(), "theme-picker-herdr-app-"));
+  });
+
+  afterEach(async () => {
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it("uses the Herdr font family only when all four local faces are present", async () => {
+    const fonts = path.join(tmpDir, "fonts");
+    await mkdir(fonts);
+    for (const face of ["Regular", "Italic", "Bold"]) {
+      await writeFile(path.join(fonts, `MonoLisaCodeHerdr-${face}.ttf`), "");
+    }
+    await writeHerdrAppFont('font-family = "MonoLisaCode"', tmpDir);
+    const settings = path.join(tmpDir, "settings.json");
+    expect(JSON.parse(await readFile(settings, "utf8"))).toMatchObject({ font: "MonoLisaCode" });
+
+    await writeFile(path.join(fonts, "MonoLisaCodeHerdr-BoldItalic.ttf"), "");
+    await writeHerdrAppFont('font-family = "MonoLisaCode"', tmpDir);
+    expect(JSON.parse(await readFile(settings, "utf8"))).toMatchObject({
+      font: "MonoLisaCode Herdr",
+    });
+
+    await writeHerdrAppFont('font-family = "Geist Mono"', tmpDir);
+    expect(JSON.parse(await readFile(settings, "utf8"))).toMatchObject({ font: "Geist Mono" });
+  });
+
+  it("writes both appearance palettes and keeps every other setting", async () => {
+    const settingsPath = path.join(tmpDir, "settings.json");
+    const original = {
+      zoom: 1.25,
+      sounds: { enabled: false },
+      theme: "graphite",
+      colors: { accent: "#ff0000" },
+    };
+    await writeFile(settingsPath, `${JSON.stringify(original)}\n`);
+    const dark = makePalette("#101010", "#eeeeee");
+    const light = makePalette("#fafafa", "#111111");
+
+    const result = await writeHerdrAppTheme(tmpDir, { dark, light });
+
+    expect(result.isOk()).toBe(true);
+    expect(JSON.parse(await readFile(settingsPath, "utf8"))).toEqual({
+      ...original,
+      theme: { light: "theme-picker-light", dark: "theme-picker-dark" },
+    });
+    expect(
+      JSON.parse(await readFile(path.join(tmpDir, "themes", "theme-picker-dark.json"), "utf8")),
+    ).toEqual(dark);
+    expect(
+      JSON.parse(await readFile(path.join(tmpDir, "themes", "theme-picker-light.json"), "utf8")),
+    ).toEqual(light);
+  });
+
+  it("writes one palette for every appearance when the theme has no light palette", async () => {
+    const dark = makePalette("#101010", "#eeeeee");
+
+    const result = await writeHerdrAppTheme(tmpDir, { dark });
+
+    expect(result.isOk()).toBe(true);
+    expect(JSON.parse(await readFile(path.join(tmpDir, "settings.json"), "utf8"))).toEqual({
+      theme: "theme-picker",
+    });
+    expect(
+      JSON.parse(await readFile(path.join(tmpDir, "themes", "theme-picker.json"), "utf8")),
+    ).toEqual(dark);
+    expect(await Bun.file(path.join(tmpDir, "themes", "theme-picker-dark.json")).exists()).toBe(
+      false,
+    );
+  });
+
+  it("updates settings through a Stow symlink and keeps the link", async () => {
+    const dotfilesDir = path.join(tmpDir, "dotfiles");
+    await mkdir(dotfilesDir, { recursive: true });
+    const targetPath = path.join(dotfilesDir, "settings.json");
+    await writeFile(targetPath, '{"zoom":1}\n');
+    const linkPath = path.join(tmpDir, "settings.json");
+    await symlink(targetPath, linkPath);
+
+    const result = await writeHerdrAppTheme(tmpDir, { dark: makePalette("#101010", "#eeeeee") });
+
+    expect(result.isOk()).toBe(true);
+    expect((await lstat(linkPath)).isSymbolicLink()).toBe(true);
+    expect(await readlink(linkPath)).toEqual(targetPath);
+    expect(JSON.parse(await readFile(targetPath, "utf8"))).toEqual({
+      zoom: 1,
+      theme: "theme-picker",
+    });
+  });
+
+  it("leaves invalid settings alone and writes no theme file", async () => {
+    const settingsPath = path.join(tmpDir, "settings.json");
+    await writeFile(settingsPath, "{ not json");
+
+    const result = await writeHerdrAppTheme(tmpDir, { dark: makePalette("#101010", "#eeeeee") });
+
+    expect(result._unsafeUnwrapErr()).toMatchObject({ operation: "parse", filePath: settingsPath });
+    expect(await readFile(settingsPath, "utf8")).toEqual("{ not json");
+    expect(await Bun.file(path.join(tmpDir, "themes", "theme-picker.json")).exists()).toBe(false);
+  });
+
+  it("rejects a palette that does not have 16 ANSI colors", async () => {
+    const dark = { ...makePalette("#101010", "#eeeeee"), ansi: ["#000000"] };
+
+    const result = await writeHerdrAppTheme(tmpDir, { dark });
+
+    expect(result.isErr()).toBe(true);
+    expect(await Bun.file(path.join(tmpDir, "themes", "theme-picker.json")).exists()).toBe(false);
   });
 });

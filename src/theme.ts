@@ -1,22 +1,23 @@
-import { errAsync, okAsync, ResultAsync } from "neverthrow";
+import { errAsync, okAsync, Result, ResultAsync } from "neverthrow";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { z } from "zod";
 
 const BLOCK_START = ">>> theme-picker >>>";
 const BLOCK_END = "<<< theme-picker <<<";
 
 /**
- * Reports that a theme helper could not read, write, or remove a file.
+ * Reports that a theme helper could not read, parse, write, or remove a file.
  *
- * @param operation The file system operation that failed.
+ * @param operation The file system or parse operation that failed.
  * @param filePath The path of the file that the operation used.
  */
 export class ThemeFileError extends Error {
   override name = "ThemeFileError";
 
   constructor(
-    readonly operation: "read" | "write" | "remove",
+    readonly operation: "read" | "parse" | "write" | "remove",
     readonly filePath: string,
     options?: ErrorOptions,
   ) {
@@ -280,7 +281,7 @@ export function applyRexConfig(content: string): ResultAsync<void, never> {
 
 /**
  * Applies a Ghostty config block, asks Ghostty to reload, and applies the same theme and font to
- * Rex.
+ * Rex. It also copies the font to Herdr.
  *
  * @param filePath The path of the Ghostty config file.
  * @param content The content to put between the theme-picker markers.
@@ -289,19 +290,214 @@ export function applyRexConfig(content: string): ResultAsync<void, never> {
 export function applyGhosttyConfig(filePath: string, content: string): ResultAsync<void, Error> {
   return patchDelimitedBlock(filePath, "#", content)
     .andThen(() => tryRunCommand("osascript", ["-e", GHOSTTY_RELOAD_SCRIPT]))
-    .andThen(() => applyRexConfig(content));
+    .andThen(() => applyRexConfig(content))
+    .andThen(() => writeHerdrAppFont(content));
 }
 
 /**
- * Applies a herdr config block and asks herdr to reload.
- *
- * @param filePath The path of the herdr config file.
- * @param content The content to put between the theme-picker markers.
- * @returns A result that fails when the file system refuses a read or write.
+ * One herdr-app theme palette. The herdr-app reads this object from a JSON file in its `themes`
+ * folder.
  */
-export function applyHerdrConfig(filePath: string, content: string): ResultAsync<void, Error> {
-  return patchDelimitedBlock(filePath, "#", content).andThen(() =>
-    tryRunCommand("herdr", ["server", "reload-config"]),
+export type HerdrAppPalette = z.infer<typeof herdrAppPaletteSchema>;
+
+/**
+ * A herdr-app theme. When this object has a light palette, the theme follows the system
+ * appearance. Otherwise, the theme always uses the dark palette.
+ */
+export type HerdrAppTheme = z.infer<typeof herdrAppThemeSchema>;
+
+const HERDR_APP_SINGLE_THEME = "theme-picker";
+const HERDR_APP_DARK_THEME = "theme-picker-dark";
+const HERDR_APP_LIGHT_THEME = "theme-picker-light";
+
+const colorSchema = z.string().regex(/^#[0-9a-fA-F]{6}$/);
+const herdrAppPaletteSchema = z.object({
+  background: colorSchema,
+  foreground: colorSchema,
+  selection: colorSchema,
+  cursor: colorSchema.optional(),
+  ansi: z.array(colorSchema).length(16),
+  colors: z.record(z.string(), z.string()).optional(),
+});
+const herdrAppThemeSchema = z.object({
+  dark: herdrAppPaletteSchema,
+  light: herdrAppPaletteSchema.optional(),
+});
+const settingsSchema = z.record(z.string(), z.unknown());
+
+interface HerdrAppThemeFile {
+  readonly name: string;
+  readonly palette: HerdrAppPalette;
+}
+
+function getHerdrAppThemeFiles(theme: HerdrAppTheme): HerdrAppThemeFile[] {
+  return theme.light === undefined
+    ? [{ name: HERDR_APP_SINGLE_THEME, palette: theme.dark }]
+    : [
+        { name: HERDR_APP_LIGHT_THEME, palette: theme.light },
+        { name: HERDR_APP_DARK_THEME, palette: theme.dark },
+      ];
+}
+
+function parseSettings(
+  filePath: string,
+  text: string,
+): ResultAsync<Record<string, unknown>, Error> {
+  const parsedJson = Result.fromThrowable(
+    (): unknown => JSON.parse(text),
+    (cause) => new ThemeFileError("parse", filePath, { cause }),
+  )();
+
+  if (parsedJson.isErr()) {
+    return errAsync(parsedJson.error);
+  }
+
+  const parsed = settingsSchema.safeParse(parsedJson.value);
+  return parsed.success
+    ? okAsync(parsed.data)
+    : errAsync(new ThemeFileError("parse", filePath, { cause: parsed.error }));
+}
+
+function withHerdrAppTheme(
+  settings: Record<string, unknown>,
+  theme: HerdrAppTheme,
+): Record<string, unknown> {
+  return {
+    ...settings,
+    theme:
+      theme.light === undefined
+        ? HERDR_APP_SINGLE_THEME
+        : { light: HERDR_APP_LIGHT_THEME, dark: HERDR_APP_DARK_THEME },
+  };
+}
+
+function readHerdrAppSettings(configDir: string): ResultAsync<Record<string, unknown>, Error> {
+  const file = path.join(configDir, "settings.json");
+  return readFileIfExists(file).andThen((existing) =>
+    existing === undefined ? okAsync({}) : parseSettings(file, existing),
+  );
+}
+
+function writeHerdrAppSettings(
+  configDir: string,
+  settings: Record<string, unknown>,
+): ResultAsync<void, Error> {
+  return writeFileContent(
+    path.join(configDir, "settings.json"),
+    `${JSON.stringify(settings, null, 2)}\n`,
+  );
+}
+
+function writeHerdrAppPalettes(
+  configDir: string,
+  files: HerdrAppThemeFile[],
+): ResultAsync<void, Error> {
+  return files.reduce<ResultAsync<void, Error>>(
+    (result, file) =>
+      result.andThen(() =>
+        writeFileContent(
+          path.join(configDir, "themes", `${file.name}.json`),
+          `${JSON.stringify(file.palette, null, 2)}\n`,
+        ),
+      ),
+    okAsync(undefined),
+  );
+}
+
+const HERDR_MONOLISA_FACES = ["Regular", "Italic", "Bold", "BoldItalic"];
+
+function herdrFontFamily(
+  family: string | undefined,
+  configDir: string,
+): ResultAsync<string | undefined, never> {
+  if (family !== "MonoLisaCode") return okAsync(family);
+  const files = HERDR_MONOLISA_FACES.map((face) =>
+    Bun.file(path.join(configDir, "fonts", `MonoLisaCodeHerdr-${face}.ttf`)).exists(),
+  );
+  return ResultAsync.fromSafePromise(Promise.all(files)).map((found) =>
+    found.every(Boolean) ? "MonoLisaCode Herdr" : family,
+  );
+}
+
+function fontSettings(family: string | undefined, size: number | undefined) {
+  return {
+    ...(family === undefined ? {} : { font: family }),
+    ...(size === undefined ? {} : { font_size: size }),
+  };
+}
+
+/**
+ * Copies the font family and size from a Ghostty config block to Herdr settings.
+ * Uses the local four-face MonoLisaCode Herdr family when all four files are present.
+ * Keeps unrelated settings and existing symbolic links. Missing font values stay unchanged.
+ */
+export function writeHerdrAppFont(
+  content: string,
+  configDir = path.join(os.homedir(), ".config", "herdr-app"),
+): ResultAsync<void, Error> {
+  const { fontFamily, fontSize } = parseRexSettings(content);
+  return readHerdrAppSettings(configDir).andThen((settings) =>
+    herdrFontFamily(fontFamily, configDir).andThen((family) =>
+      writeHerdrAppSettings(configDir, { ...settings, ...fontSettings(family, fontSize) }),
+    ),
+  );
+}
+
+/**
+ * Writes a herdr-app theme and selects it in settings.json. This helper keeps every other
+ * settings.json value. It writes through symbolic links, so GNU Stow links stay in place.
+ *
+ * A theme with a light palette writes `themes/theme-picker-light.json` and
+ * `themes/theme-picker-dark.json`, and selects the pair for the system appearance. A theme with
+ * only a dark palette writes `themes/theme-picker.json`, and selects it for every appearance.
+ *
+ * @param configDir The herdr-app configuration folder.
+ * @param theme The theme palette or palettes to write.
+ * @returns A result that fails when the theme or settings data is invalid, or when the file system
+ * refuses a read or write.
+ */
+export function writeHerdrAppTheme(
+  configDir: string,
+  theme: HerdrAppTheme,
+): ResultAsync<void, Error> {
+  const parsedTheme = herdrAppThemeSchema.safeParse(theme);
+  if (!parsedTheme.success) {
+    return errAsync(
+      new ThemeFileError("parse", path.join(configDir, "themes"), {
+        cause: parsedTheme.error,
+      }),
+    );
+  }
+
+  const themeFiles = getHerdrAppThemeFiles(parsedTheme.data);
+  return readHerdrAppSettings(configDir).andThen((settings) =>
+    writeHerdrAppPalettes(configDir, themeFiles).andThen(() =>
+      writeHerdrAppSettings(configDir, withHerdrAppTheme(settings, parsedTheme.data)),
+    ),
+  );
+}
+
+/**
+ * Writes a herdr-app theme, selects it in settings.json, and asks the open herdr-app window to use
+ * it on the shown layout. A failed command only writes a warning, such as when the app is closed.
+ *
+ * @param theme The theme palette or palettes to write.
+ * @param configDir The herdr-app configuration folder.
+ * @returns A result that fails when the theme or settings data is invalid, or when the file system
+ * refuses a read or write.
+ */
+export function applyHerdrAppTheme(
+  theme: HerdrAppTheme,
+  configDir = path.join(os.homedir(), ".config", "herdr-app"),
+): ResultAsync<void, Error> {
+  const themeNames = getHerdrAppThemeFiles(theme).map((file) => file.name);
+
+  return writeHerdrAppTheme(configDir, theme).andThen(() =>
+    themeNames.reduce<ResultAsync<void, never>>(
+      (result, name) =>
+        result.andThen(() => tryRunCommand("herdr-app", ["do", "app.theme", "--name", name])),
+      okAsync(undefined),
+    ),
   );
 }
 

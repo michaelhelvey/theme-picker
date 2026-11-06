@@ -63,9 +63,8 @@ reload the app:
   reload. A closed Ghostty reads the config on its next start. Live reload needs macOS Accessibility
   and Automation access for the calling terminal. It also imports the `theme` value into Rex and
   copies `font-family` and `font-size` to Rex and Herdr. Use a theme name from Ghostty or from
-  `~/.config/ghostty/themes`, so that Rex can find the theme file. Herdr uses the local
-  `MonoLisaCode Herdr` family for MonoLisaCode when all four face files are present in
-  `~/.config/herdr-app/fonts/`. Other fonts are copied without a name change.
+  `~/.config/ghostty/themes`, so that Rex can find the theme file. Herdr takes the family name as it
+  is, so the font must be installed on the machine.
 - `applyTmuxConfig(path, content)` patches the tmux config and reloads tmux. It also reinstalls the
   plugins and restarts the server when the plugin set changes.
 - `applyHerdrAppTheme(theme)` writes the herdr-app theme files and selects them in

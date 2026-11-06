@@ -49,10 +49,8 @@ Settings > Privacy & Security > Accessibility and Automation. Command warnings i
 output, so Rex connection, client selection, and import errors remain visible. Rex theme imports
 need a running Rex app. Set `REX_CLIENT` to select an app when more than one is connected.
 
-The Ghostty font family and size also apply to Herdr. Herdr keeps its own zoom setting. For
-MonoLisaCode, Herdr uses `MonoLisaCode Herdr` when its Regular, Italic, Bold, and BoldItalic files
-are present in `~/.config/herdr-app/fonts/` as `MonoLisaCodeHerdr-<face>.ttf`. Otherwise, it uses
-the original font family.
+The Ghostty font family and size also apply to Herdr. Herdr keeps its own zoom setting. Herdr uses
+any font family the machine has installed, so it takes the family name as it is.
 
 Each theme also writes a herdr-app theme in `~/.config/herdr-app/themes/` and selects it in
 `~/.config/herdr-app/settings.json`. A theme with a light and a dark palette writes

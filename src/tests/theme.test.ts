@@ -269,21 +269,10 @@ describe("writeHerdrAppTheme", () => {
     await rm(tmpDir, { recursive: true, force: true });
   });
 
-  it("uses the Herdr font family only when all four local faces are present", async () => {
-    const fonts = path.join(tmpDir, "fonts");
-    await mkdir(fonts);
-    for (const face of ["Regular", "Italic", "Bold"]) {
-      await writeFile(path.join(fonts, `MonoLisaCodeHerdr-${face}.ttf`), "");
-    }
+  it("copies the font family through unchanged", async () => {
     await writeHerdrAppFont('font-family = "MonoLisaCode"', tmpDir);
     const settings = path.join(tmpDir, "settings.json");
     expect(JSON.parse(await readFile(settings, "utf8"))).toMatchObject({ font: "MonoLisaCode" });
-
-    await writeFile(path.join(fonts, "MonoLisaCodeHerdr-BoldItalic.ttf"), "");
-    await writeHerdrAppFont('font-family = "MonoLisaCode"', tmpDir);
-    expect(JSON.parse(await readFile(settings, "utf8"))).toMatchObject({
-      font: "MonoLisaCode Herdr",
-    });
 
     await writeHerdrAppFont('font-family = "Geist Mono"', tmpDir);
     expect(JSON.parse(await readFile(settings, "utf8"))).toMatchObject({ font: "Geist Mono" });

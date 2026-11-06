@@ -411,21 +411,6 @@ function writeHerdrAppPalettes(
   );
 }
 
-const HERDR_MONOLISA_FACES = ["Regular", "Italic", "Bold", "BoldItalic"];
-
-function herdrFontFamily(
-  family: string | undefined,
-  configDir: string,
-): ResultAsync<string | undefined, never> {
-  if (family !== "MonoLisaCode") return okAsync(family);
-  const files = HERDR_MONOLISA_FACES.map((face) =>
-    Bun.file(path.join(configDir, "fonts", `MonoLisaCodeHerdr-${face}.ttf`)).exists(),
-  );
-  return ResultAsync.fromSafePromise(Promise.all(files)).map((found) =>
-    found.every(Boolean) ? "MonoLisaCode Herdr" : family,
-  );
-}
-
 function fontSettings(family: string | undefined, size: number | undefined) {
   return {
     ...(family === undefined ? {} : { font: family }),
@@ -435,7 +420,6 @@ function fontSettings(family: string | undefined, size: number | undefined) {
 
 /**
  * Copies the font family and size from a Ghostty config block to Herdr settings.
- * Uses the local four-face MonoLisaCode Herdr family when all four files are present.
  * Keeps unrelated settings and existing symbolic links. Missing font values stay unchanged.
  */
 export function writeHerdrAppFont(
@@ -444,9 +428,7 @@ export function writeHerdrAppFont(
 ): ResultAsync<void, Error> {
   const { fontFamily, fontSize } = parseRexSettings(content);
   return readHerdrAppSettings(configDir).andThen((settings) =>
-    herdrFontFamily(fontFamily, configDir).andThen((family) =>
-      writeHerdrAppSettings(configDir, { ...settings, ...fontSettings(family, fontSize) }),
-    ),
+    writeHerdrAppSettings(configDir, { ...settings, ...fontSettings(fontFamily, fontSize) }),
   );
 }
 

@@ -1,13 +1,7 @@
 import os from "node:os";
 import path from "node:path";
 import type { ThemeModule } from "../src/config";
-import type { HerdrAppTheme } from "../src/theme";
-import {
-  applyGhosttyConfig,
-  applyHerdrAppTheme,
-  applyTmuxConfig,
-  writeFileContent,
-} from "../src/theme";
+import { applyGhosttyConfig, applyTmuxConfig, writeFileContent } from "../src/theme";
 
 const homeDir = os.homedir();
 
@@ -68,66 +62,14 @@ return {
   },
 }`;
 
-const herdrAppTheme = {
-  dark: {
-    background: "#1e1e2e",
-    foreground: "#cdd6f4",
-    selection: "#f5e0dc",
-    cursor: "#f5e0dc",
-    ansi: [
-      "#45475a",
-      "#f38ba8",
-      "#a6e3a1",
-      "#f9e2af",
-      "#89b4fa",
-      "#f5c2e7",
-      "#94e2d5",
-      "#bac2de",
-      "#585b70",
-      "#f7aec2",
-      "#c2ecbf",
-      "#fcd682",
-      "#aeccfc",
-      "#f398da",
-      "#b1eae1",
-      "#a6adc8",
-    ],
-  },
-  light: {
-    background: "#eff1f5",
-    foreground: "#4c4f69",
-    selection: "#dc8a78",
-    cursor: "#dc8a78",
-    ansi: [
-      "#bcc0cc",
-      "#d20f39",
-      "#40a02b",
-      "#df8e1d",
-      "#1e66f5",
-      "#ea76cb",
-      "#179299",
-      "#5c5f77",
-      "#acb0be",
-      "#e7103f",
-      "#46b02f",
-      "#e49931",
-      "#3878f6",
-      "#ef95d7",
-      "#19a1a8",
-      "#6c6f85",
-    ],
-  },
-} satisfies HerdrAppTheme;
-
 /**
  * The cattpuccin theme. This theme applies the Catppuccin Mocha / Catppuccin Latte colors to
- * Ghostty, tmux, Neovim, and herdr-app.
+ * Ghostty, tmux, and Neovim.
  */
 export default {
   apply() {
     return applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig)
       .andThen(() => applyTmuxConfig(tmuxConfigPath, tmuxConfig))
-      .andThen(() => writeFileContent(neovimColorsPath, neovimColors))
-      .andThen(() => applyHerdrAppTheme(herdrAppTheme));
+      .andThen(() => writeFileContent(neovimColorsPath, neovimColors));
   },
 } satisfies ThemeModule;

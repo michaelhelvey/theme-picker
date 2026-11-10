@@ -1,13 +1,7 @@
 import os from "node:os";
 import path from "node:path";
 import type { ThemeModule } from "../src/config";
-import type { HerdrAppTheme } from "../src/theme";
-import {
-  applyGhosttyConfig,
-  applyHerdrAppTheme,
-  applyTmuxConfig,
-  writeFileContent,
-} from "../src/theme";
+import { applyGhosttyConfig, applyTmuxConfig, writeFileContent } from "../src/theme";
 
 const homeDir = os.homedir();
 
@@ -69,42 +63,14 @@ return {
   },
 }`;
 
-const herdrAppTheme = {
-  dark: {
-    background: "#062625",
-    foreground: "#d0b892",
-    selection: "#0000ff",
-    cursor: "#ffffff",
-    ansi: [
-      "#041b1a",
-      "#f92672",
-      "#a6e22e",
-      "#e6db74",
-      "#66d9ef",
-      "#fd5ff0",
-      "#87ffde",
-      "#d0b892",
-      "#126367",
-      "#ff5f87",
-      "#b8f26b",
-      "#fff394",
-      "#8be9ff",
-      "#ff86f7",
-      "#a1efe4",
-      "#ffffff",
-    ],
-  },
-} satisfies HerdrAppTheme;
-
 /**
  * The naysayer theme. This theme applies the RostislavArts/naysayer.nvim colors to Ghostty, tmux,
- * Neovim, and herdr-app.
+ * and Neovim.
  */
 export default {
   apply() {
     return applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig)
       .andThen(() => applyTmuxConfig(tmuxConfigPath, tmuxConfig))
-      .andThen(() => writeFileContent(neovimColorsPath, neovimColors))
-      .andThen(() => applyHerdrAppTheme(herdrAppTheme));
+      .andThen(() => writeFileContent(neovimColorsPath, neovimColors));
   },
 } satisfies ThemeModule;

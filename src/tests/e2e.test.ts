@@ -82,10 +82,10 @@ describe("theme-picker cli", () => {
     const homeDir = path.join(themesDir, "home");
     const dotfilesDir = path.join(homeDir, ".dotfiles");
     const fixtureThemes = path.join(themesDir, "linked-themes");
-    await mkdir(path.join(homeDir, ".config", "herdr"), { recursive: true });
-    await mkdir(path.join(dotfilesDir, ".config", "herdr"), { recursive: true });
+    await mkdir(path.join(homeDir, ".config", "ghostty"), { recursive: true });
+    await mkdir(path.join(dotfilesDir, ".config", "ghostty"), { recursive: true });
     await mkdir(fixtureThemes);
-    const configs = [".tmux.conf", ".config/herdr/config.toml"];
+    const configs = [".tmux.conf", ".config/ghostty/config"];
 
     for (const config of configs) {
       const targetPath = path.join(dotfilesDir, config);
@@ -101,7 +101,7 @@ describe("theme-picker cli", () => {
           `import { patchDelimitedBlock } from ${JSON.stringify(themeHelper)};`,
           "export default {",
           `  apply: () => patchDelimitedBlock(${JSON.stringify(path.join(homeDir, ".tmux.conf"))}, "#", "theme = ${name}")`,
-          `    .andThen(() => patchDelimitedBlock(${JSON.stringify(path.join(homeDir, ".config/herdr/config.toml"))}, "#", "theme = ${name}")),`,
+          `    .andThen(() => patchDelimitedBlock(${JSON.stringify(path.join(homeDir, ".config/ghostty/config"))}, "#", "theme = ${name}")),`,
           "};",
         ].join("\n"),
       );

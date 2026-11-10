@@ -1,13 +1,7 @@
 import os from "node:os";
 import path from "node:path";
 import type { ThemeModule } from "../src/config";
-import type { HerdrAppTheme } from "../src/theme";
-import {
-  applyGhosttyConfig,
-  applyHerdrAppTheme,
-  applyTmuxConfig,
-  writeFileContent,
-} from "../src/theme";
+import { applyGhosttyConfig, applyTmuxConfig, writeFileContent } from "../src/theme";
 
 const homeDir = os.homedir();
 
@@ -44,42 +38,14 @@ return {
   },
 }`;
 
-const herdrAppTheme = {
-  dark: {
-    background: "#2d2d2d",
-    foreground: "#cccccc",
-    selection: "#515151",
-    cursor: "#cccccc",
-    ansi: [
-      "#000000",
-      "#f2777a",
-      "#99cc99",
-      "#ffcc66",
-      "#6699cc",
-      "#cc99cc",
-      "#66cccc",
-      "#cccccc",
-      "#666666",
-      "#f2777a",
-      "#99cc99",
-      "#ffcc66",
-      "#6699cc",
-      "#cc99cc",
-      "#66cccc",
-      "#ffffff",
-    ],
-  },
-} satisfies HerdrAppTheme;
-
 /**
  * The sphaero theme. This theme applies the base16-tomorrow-night-eighties colors to Ghostty, tmux,
- * Neovim, and herdr-app.
+ * and Neovim.
  */
 export default {
   apply() {
     return applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig)
       .andThen(() => applyTmuxConfig(tmuxConfigPath, tmuxConfig))
-      .andThen(() => writeFileContent(neovimColorsPath, neovimColors))
-      .andThen(() => applyHerdrAppTheme(herdrAppTheme));
+      .andThen(() => writeFileContent(neovimColorsPath, neovimColors));
   },
 } satisfies ThemeModule;

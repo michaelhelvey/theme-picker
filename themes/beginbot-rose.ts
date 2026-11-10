@@ -1,13 +1,7 @@
 import os from "node:os";
 import path from "node:path";
 import type { ThemeModule } from "../src/config";
-import type { HerdrAppTheme } from "../src/theme";
-import {
-  applyGhosttyConfig,
-  applyHerdrAppTheme,
-  applyTmuxConfig,
-  writeFileContent,
-} from "../src/theme";
+import { applyGhosttyConfig, applyTmuxConfig, writeFileContent } from "../src/theme";
 
 const homeDir = os.homedir();
 
@@ -84,42 +78,14 @@ return {
   },
 }`;
 
-const herdrAppTheme = {
-  dark: {
-    background: "#191724",
-    foreground: "#e0def4",
-    selection: "#403d52",
-    cursor: "#e0def4",
-    ansi: [
-      "#26233a",
-      "#eb6f92",
-      "#31748f",
-      "#f6c177",
-      "#9ccfd8",
-      "#c4a7e7",
-      "#ebbcba",
-      "#e0def4",
-      "#6e6a86",
-      "#eb6f92",
-      "#31748f",
-      "#f6c177",
-      "#9ccfd8",
-      "#c4a7e7",
-      "#ebbcba",
-      "#e0def4",
-    ],
-  },
-} satisfies HerdrAppTheme;
-
 /**
  * The beginbot-rose theme. This theme applies the Rosé Pine with transparent background colors to
- * Ghostty, tmux, Neovim, and herdr-app.
+ * Ghostty, tmux, and Neovim.
  */
 export default {
   apply() {
     return applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig)
       .andThen(() => applyTmuxConfig(tmuxConfigPath, tmuxConfig))
-      .andThen(() => writeFileContent(neovimColorsPath, neovimColors))
-      .andThen(() => applyHerdrAppTheme(herdrAppTheme));
+      .andThen(() => writeFileContent(neovimColorsPath, neovimColors));
   },
 } satisfies ThemeModule;

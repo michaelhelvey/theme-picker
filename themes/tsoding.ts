@@ -1,13 +1,7 @@
 import os from "node:os";
 import path from "node:path";
 import type { ThemeModule } from "../src/config";
-import type { HerdrAppTheme } from "../src/theme";
-import {
-  applyGhosttyConfig,
-  applyHerdrAppTheme,
-  applyTmuxConfig,
-  writeFileContent,
-} from "../src/theme";
+import { applyGhosttyConfig, applyTmuxConfig, writeFileContent } from "../src/theme";
 
 const homeDir = os.homedir();
 
@@ -73,42 +67,13 @@ return {
 	},
 }`;
 
-const herdrAppTheme = {
-  dark: {
-    background: "#181818",
-    foreground: "#e4e4e4",
-    selection: "#ffffff",
-    cursor: "#ffdb00",
-    ansi: [
-      "#181818",
-      "#ff0a36",
-      "#42dc00",
-      "#ffdb00",
-      "#92a7cb",
-      "#a095cb",
-      "#90aa9e",
-      "#e4e4e4",
-      "#54494e",
-      "#ff3851",
-      "#42dc00",
-      "#ffdb00",
-      "#92a7cb",
-      "#afafda",
-      "#90aa9e",
-      "#f5f5f5",
-    ],
-  },
-} satisfies HerdrAppTheme;
-
 /**
- * The tsoding theme. This theme applies the Gruber Darker colors to Ghostty, tmux, Neovim, and
- * herdr-app.
+ * The tsoding theme. This theme applies the Gruber Darker colors to Ghostty, tmux, and Neovim.
  */
 export default {
   apply() {
     return applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig)
       .andThen(() => applyTmuxConfig(tmuxConfigPath, tmuxConfig))
-      .andThen(() => writeFileContent(neovimColorsPath, neovimColors))
-      .andThen(() => applyHerdrAppTheme(herdrAppTheme));
+      .andThen(() => writeFileContent(neovimColorsPath, neovimColors));
   },
 } satisfies ThemeModule;

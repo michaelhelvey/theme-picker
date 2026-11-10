@@ -1,13 +1,7 @@
 import os from "node:os";
 import path from "node:path";
 import type { ThemeModule } from "../src/config";
-import type { HerdrAppTheme } from "../src/theme";
-import {
-  applyGhosttyConfig,
-  applyHerdrAppTheme,
-  applyTmuxConfig,
-  writeFileContent,
-} from "../src/theme";
+import { applyGhosttyConfig, applyTmuxConfig, writeFileContent } from "../src/theme";
 
 const homeDir = os.homedir();
 
@@ -141,42 +135,13 @@ return {
   },
 }`;
 
-const herdrAppTheme = {
-  dark: {
-    background: "#000000",
-    foreground: "#ffffff",
-    selection: "#1b1b1b",
-    cursor: "#ffffff",
-    ansi: [
-      "#000000",
-      "#800000",
-      "#008000",
-      "#808000",
-      "#000080",
-      "#800080",
-      "#008080",
-      "#c0c0c0",
-      "#808080",
-      "#ff0000",
-      "#00ff00",
-      "#ffff00",
-      "#0000ff",
-      "#ff00ff",
-      "#00ffff",
-      "#ffffff",
-    ],
-  },
-} satisfies HerdrAppTheme;
-
 /**
- * The plain theme. This theme applies the Pure black and white colors to Ghostty, tmux, Neovim, and
- * herdr-app.
+ * The plain theme. This theme applies the Pure black and white colors to Ghostty, tmux, and Neovim.
  */
 export default {
   apply() {
     return applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig)
       .andThen(() => applyTmuxConfig(tmuxConfigPath, tmuxConfig))
-      .andThen(() => writeFileContent(neovimColorsPath, neovimColors))
-      .andThen(() => applyHerdrAppTheme(herdrAppTheme));
+      .andThen(() => writeFileContent(neovimColorsPath, neovimColors));
   },
 } satisfies ThemeModule;

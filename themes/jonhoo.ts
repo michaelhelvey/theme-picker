@@ -1,13 +1,7 @@
 import os from "node:os";
 import path from "node:path";
 import type { ThemeModule } from "../src/config";
-import type { HerdrAppTheme } from "../src/theme";
-import {
-  applyGhosttyConfig,
-  applyHerdrAppTheme,
-  applyTmuxConfig,
-  writeFileContent,
-} from "../src/theme";
+import { applyGhosttyConfig, applyTmuxConfig, writeFileContent } from "../src/theme";
 
 const homeDir = os.homedir();
 
@@ -109,42 +103,13 @@ return {
   },
 }`;
 
-const herdrAppTheme = {
-  dark: {
-    background: "#1d2021",
-    foreground: "#d5c4a1",
-    selection: "#504945",
-    cursor: "#d5c4a1",
-    ansi: [
-      "#1d2021",
-      "#fb4934",
-      "#b8bb26",
-      "#fabd2f",
-      "#83a598",
-      "#d3869b",
-      "#8ec07c",
-      "#d5c4a1",
-      "#665c54",
-      "#fe8019",
-      "#3c3836",
-      "#504945",
-      "#bdae93",
-      "#ebdbb2",
-      "#d65d0e",
-      "#fbf1c7",
-    ],
-  },
-} satisfies HerdrAppTheme;
-
 /**
- * The jonhoo theme. This theme applies the Gruvbox Dark Hard colors to Ghostty, tmux, Neovim, and
- * herdr-app.
+ * The jonhoo theme. This theme applies the Gruvbox Dark Hard colors to Ghostty, tmux, and Neovim.
  */
 export default {
   apply() {
     return applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig)
       .andThen(() => applyTmuxConfig(tmuxConfigPath, tmuxConfig))
-      .andThen(() => writeFileContent(neovimColorsPath, neovimColors))
-      .andThen(() => applyHerdrAppTheme(herdrAppTheme));
+      .andThen(() => writeFileContent(neovimColorsPath, neovimColors));
   },
 } satisfies ThemeModule;

@@ -1,13 +1,7 @@
 import os from "node:os";
 import path from "node:path";
 import type { ThemeModule } from "../src/config";
-import type { HerdrAppTheme } from "../src/theme";
-import {
-  applyGhosttyConfig,
-  applyHerdrAppTheme,
-  applyTmuxConfig,
-  writeFileContent,
-} from "../src/theme";
+import { applyGhosttyConfig, applyTmuxConfig, writeFileContent } from "../src/theme";
 
 const homeDir = os.homedir();
 
@@ -206,67 +200,15 @@ return {
   },
 }`;
 
-const herdrAppTheme = {
-  dark: {
-    background: "#011627",
-    foreground: "#d6deeb",
-    selection: "#5f7e97",
-    cursor: "#7e57c2",
-    ansi: [
-      "#011627",
-      "#ef5350",
-      "#22da6e",
-      "#addb67",
-      "#82aaff",
-      "#c792ea",
-      "#21c7a8",
-      "#ffffff",
-      "#575656",
-      "#ef5350",
-      "#22da6e",
-      "#ffeb95",
-      "#82aaff",
-      "#c792ea",
-      "#7fdbca",
-      "#ffffff",
-    ],
-  },
-  light: {
-    background: "#f8f9fa",
-    foreground: "#41464b",
-    selection: "#035bd6",
-    cursor: "#ca8105",
-    ansi: [
-      "#000000",
-      "#bb4247",
-      "#357b00",
-      "#936203",
-      "#0171b0",
-      "#825aa9",
-      "#007b5c",
-      "#909090",
-      "#606060",
-      "#c4494d",
-      "#5d7d03",
-      "#9d6804",
-      "#0078bb",
-      "#8961b1",
-      "#038363",
-      "#d1d1d1",
-    ],
-  },
-} satisfies HerdrAppTheme;
-
 /**
- * The mitsuhiko theme. This theme applies the Night Owl colors to Ghostty, tmux, Neovim, and
- * herdr-app. In light mode, Ghostty and herdr-app use the Day Owl colors.
+ * The mitsuhiko theme. This theme applies the Night Owl colors to Ghostty, tmux, and Neovim. In
+ * light mode, Ghostty uses the Day Owl colors.
  */
 export default {
   apply() {
     return writeFileContent(ghosttyDayOwlThemePath, ghosttyDayOwlTheme)
       .andThen(() => applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig))
       .andThen(() => applyTmuxConfig(tmuxConfigPath, tmuxConfig))
-      .andThen(() => writeFileContent(neovimColorsPath, neovimColors))
-      .andThen(() => applyHerdrAppTheme(herdrAppTheme));
+      .andThen(() => writeFileContent(neovimColorsPath, neovimColors));
   },
 } satisfies ThemeModule;

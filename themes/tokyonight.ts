@@ -1,13 +1,7 @@
 import os from "node:os";
 import path from "node:path";
 import type { ThemeModule } from "../src/config";
-import type { HerdrAppTheme } from "../src/theme";
-import {
-  applyGhosttyConfig,
-  applyHerdrAppTheme,
-  applyTmuxConfig,
-  writeFileContent,
-} from "../src/theme";
+import { applyGhosttyConfig, applyTmuxConfig, writeFileContent } from "../src/theme";
 
 const homeDir = os.homedir();
 
@@ -50,42 +44,13 @@ return {
   },
 }`;
 
-const herdrAppTheme = {
-  dark: {
-    background: "#1a1b26",
-    foreground: "#c0caf5",
-    selection: "#283457",
-    cursor: "#c0caf5",
-    ansi: [
-      "#15161e",
-      "#f7768e",
-      "#9ece6a",
-      "#e0af68",
-      "#7aa2f7",
-      "#bb9af7",
-      "#7dcfff",
-      "#a9b1d6",
-      "#414868",
-      "#f7768e",
-      "#9ece6a",
-      "#e0af68",
-      "#7aa2f7",
-      "#bb9af7",
-      "#7dcfff",
-      "#c0caf5",
-    ],
-  },
-} satisfies HerdrAppTheme;
-
 /**
- * The tokyonight theme. This theme applies the Tokyo Night colors to Ghostty, tmux, Neovim, and
- * herdr-app.
+ * The tokyonight theme. This theme applies the Tokyo Night colors to Ghostty, tmux, and Neovim.
  */
 export default {
   apply() {
     return applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig)
       .andThen(() => applyTmuxConfig(tmuxConfigPath, tmuxConfig))
-      .andThen(() => writeFileContent(neovimColorsPath, neovimColors))
-      .andThen(() => applyHerdrAppTheme(herdrAppTheme));
+      .andThen(() => writeFileContent(neovimColorsPath, neovimColors));
   },
 } satisfies ThemeModule;

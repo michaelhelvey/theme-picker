@@ -61,9 +61,12 @@ reload the app:
 
 - `applyGhosttyConfig(path, content)` patches the Ghostty config and asks a running Ghostty to
   reload. A closed Ghostty reads the config on its next start. Live reload needs macOS Accessibility
-  and Automation access for the calling terminal. It also imports the `theme` value into Rex and
-  copies `font-family` and `font-size` to Rex. Use a theme name from Ghostty or from
-  `~/.config/ghostty/themes`, so that Rex can find the theme file.
+  and Automation access for the calling terminal. It also imports the `theme` value into Rex. Use a
+  theme name from Ghostty or from `~/.config/ghostty/themes`, so that Rex can find the theme file.
+  The helper adds `font-family = "MonoLisaCode"` and `font-size = 13` at the end of the block and
+  copies them to Rex. It first clears all `font-family` values that come before it, because Ghostty
+  adds each `font-family` value to a fallback list. All themes use this font. Do not put
+  `font-family` or `font-size` in a theme.
 - `applyTmuxConfig(path, content)` patches the tmux config and reloads tmux. It also reinstalls the
   plugins and restarts the server when the plugin set changes.
 

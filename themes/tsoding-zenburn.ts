@@ -9,9 +9,7 @@ const ghosttyConfigPath = path.join(homeDir, ".config", "ghostty", "config");
 const tmuxConfigPath = path.join(homeDir, ".tmux.conf");
 const neovimColorsPath = path.join(homeDir, ".config", "nvim", "lua", "custom", "colors.lua");
 
-const ghosttyConfig = `font-family = "Ubuntu Mono"
-font-thicken = true
-font-size = 26
+const ghosttyConfig = `font-thicken = true
 adjust-cell-width = "6%"
 theme = Zenburn`;
 

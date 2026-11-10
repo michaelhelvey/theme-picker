@@ -9,9 +9,7 @@ const ghosttyConfigPath = path.join(homeDir, ".config", "ghostty", "config");
 const tmuxConfigPath = path.join(homeDir, ".tmux.conf");
 const neovimColorsPath = path.join(homeDir, ".config", "nvim", "lua", "custom", "colors.lua");
 
-const ghosttyConfig = `font-family = "MonoLisaCode"
-font-thicken = true
-font-size = 13
+const ghosttyConfig = `font-thicken = true
 theme = dark:Catppuccin Mocha,light:Catppuccin Latte`;
 
 const tmuxConfig = `set -g @plugin 'fabioluciano/tmux-powerkit'

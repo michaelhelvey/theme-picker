@@ -10,9 +10,7 @@ const ghosttyDayOwlThemePath = path.join(homeDir, ".config", "ghostty", "themes"
 const tmuxConfigPath = path.join(homeDir, ".tmux.conf");
 const neovimColorsPath = path.join(homeDir, ".config", "nvim", "lua", "custom", "colors.lua");
 
-const ghosttyConfig = `font-family = "MonoLisaCode"
-font-thicken = true
-font-size = 13
+const ghosttyConfig = `font-thicken = true
 theme = dark:Night Owl,light:dayowl`;
 
 const ghosttyDayOwlTheme = `palette = 0=#000000

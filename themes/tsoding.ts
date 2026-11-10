@@ -9,9 +9,7 @@ const ghosttyConfigPath = path.join(homeDir, ".config", "ghostty", "config");
 const tmuxConfigPath = path.join(homeDir, ".tmux.conf");
 const neovimColorsPath = path.join(homeDir, ".config", "nvim", "lua", "custom", "colors.lua");
 
-const ghosttyConfig = `font-family = "Iosevka Custom"
-font-thicken = true
-font-size = 24
+const ghosttyConfig = `font-thicken = true
 theme = Gruber Darker`;
 
 const tmuxConfig = `# Gruber Darker

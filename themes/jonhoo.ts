@@ -9,9 +9,7 @@ const ghosttyConfigPath = path.join(homeDir, ".config", "ghostty", "config");
 const tmuxConfigPath = path.join(homeDir, ".tmux.conf");
 const neovimColorsPath = path.join(homeDir, ".config", "nvim", "lua", "custom", "colors.lua");
 
-const ghosttyConfig = `font-family = "NotoSansM Nerd Font"
-font-thicken = true
-font-size = 18
+const ghosttyConfig = `font-thicken = true
 theme = jonhoo
 font-style-italic = false
 font-style-bold = false`;

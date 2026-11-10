@@ -9,9 +9,7 @@ const ghosttyConfigPath = path.join(homeDir, ".config", "ghostty", "config");
 const tmuxConfigPath = path.join(homeDir, ".tmux.conf");
 const neovimColorsPath = path.join(homeDir, ".config", "nvim", "lua", "custom", "colors.lua");
 
-const ghosttyConfig = `font-family = "Berkeley Mono"
-font-size = 18
-theme = plain`;
+const ghosttyConfig = `theme = plain`;
 
 const tmuxConfig = `# Plain black and white
 # Managed by theme-picker. Do not edit manually.

@@ -285,17 +285,34 @@ export function applyRexConfig(content: string): ResultAsync<void, never> {
 }
 
 /**
+ * The terminal font that every theme uses. These lines go after the theme content. Ghostty adds
+ * each `font-family` value to a fallback list, so the empty values clear the families that the
+ * theme or an earlier part of the config set. For `font-size`, Ghostty and Rex use the last value.
+ */
+const TERMINAL_FONT = `font-family = ""
+font-family-bold = ""
+font-family-italic = ""
+font-family-bold-italic = ""
+font-family = "MonoLisaCode"
+font-size = 13`;
+
+/**
  * Applies a Ghostty config block, asks a running Ghostty to reload, and applies the same theme
- * and font to Rex. A closed Ghostty reads the config on its next start.
+ * and font to Rex. A closed Ghostty reads the config on its next start. The block always ends
+ * with the shared terminal font, MonoLisaCode at 13 points.
+ *
+ * @example
+ * applyGhosttyConfig(configPath, "font-thicken = true\ntheme = Gruber Darker");
  *
  * @param filePath The path of the Ghostty config file.
- * @param content The content to put between the theme-picker markers.
+ * @param content The theme settings to put between the theme-picker markers, without a font.
  * @returns A result that fails when the file system refuses a read or write.
  */
 export function applyGhosttyConfig(filePath: string, content: string): ResultAsync<void, Error> {
-  return patchDelimitedBlock(filePath, "#", content)
+  const block = `${content}\n${TERMINAL_FONT}`;
+  return patchDelimitedBlock(filePath, "#", block)
     .andThen(() => tryRunCommand("osascript", ["-e", GHOSTTY_RELOAD_SCRIPT]))
-    .andThen(() => applyRexConfig(content));
+    .andThen(() => applyRexConfig(block));
 }
 
 function extractPlugins(content: string): Set<string> {

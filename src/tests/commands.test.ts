@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { runCommand } from "../theme";
@@ -78,23 +78,52 @@ describe.skipIf(!canCheckClosedGhostty)("closed Ghostty", () => {
     await rm(home, { recursive: true, force: true });
   });
 
-  it("writes the config without a reload warning or starting Ghostty", async () => {
+  it("writes the shared font to Ghostty and Rex without a reload warning or starting Ghostty", async () => {
     const config = path.join(home, ".config", "ghostty", "config");
+    const bin = path.join(home, "bin");
+    const defaultsLog = path.join(home, "defaults.log");
+    await mkdir(bin);
+    await writeFile(path.join(bin, "defaults"), `#!/bin/sh\necho "$@" >> "${defaultsLog}"\n`);
+    await chmod(path.join(bin, "defaults"), 0o755);
+    const env = { ...process.env, HOME: home, PATH: `${bin}:${process.env.PATH}` };
+    if (Bun.which("defaults", { PATH: env.PATH }) !== path.join(bin, "defaults")) {
+      throw new Error(
+        "the defaults stub must come first on PATH, so the test keeps real Rex prefs",
+      );
+    }
     const child = Bun.spawn(
       [
         process.execPath,
         "-e",
         `import { applyGhosttyConfig } from ${JSON.stringify(themeHelper)};
-       const result = await applyGhosttyConfig(${JSON.stringify(config)}, "font-thicken = true");
+       const result = await applyGhosttyConfig(${JSON.stringify(config)}, 'font-family = "Menlo"\\nfont-size = 20');
        process.exit(result.isOk() ? 0 : 1);`,
       ],
-      { env: { ...process.env, HOME: home }, stdout: "pipe", stderr: "pipe" },
+      { env, stdout: "pipe", stderr: "pipe" },
     );
     const [stderr, exitCode] = await Promise.all([new Response(child.stderr).text(), child.exited]);
 
     expect(exitCode).toBe(0);
     expect(stderr).toBe("");
-    expect(await readFile(config, "utf8")).toContain("font-thicken = true");
+    const ghostty = Bun.spawnSync(
+      ["/Applications/Ghostty.app/Contents/MacOS/ghostty", "+show-config"],
+      { env: { ...env, XDG_CONFIG_HOME: path.join(home, ".config") } },
+    );
+    const fontLines = ghostty.stdout
+      .toString()
+      .split("\n")
+      .filter((line) => /^font-(family|size)/.test(line));
+    expect(fontLines).toEqual([
+      "font-family = MonoLisaCode",
+      "font-family-bold = MonoLisaCode",
+      "font-family-italic = MonoLisaCode",
+      "font-family-bold-italic = MonoLisaCode",
+    ]);
+    expect((await readFile(defaultsLog, "utf8")).split("\n")).toEqual([
+      "write com.superlogical.rex Workspace.terminalFontName -string MonoLisaCode",
+      "write com.superlogical.rex Workspace.terminalFontPointSize -float 13",
+      "",
+    ]);
     expect(Bun.spawnSync(["pgrep", "-x", "Ghostty"]).exitCode).toBe(1);
   });
 });

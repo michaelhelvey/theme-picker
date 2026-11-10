@@ -65,8 +65,10 @@ reload the app:
   theme name from Ghostty or from `~/.config/ghostty/themes`, so that Rex can find the theme file.
   The helper adds `font-family = "MonoLisaCode"` and `font-size = 13` at the end of the block and
   copies them to Rex. It first clears all `font-family` values that come before it, because Ghostty
-  adds each `font-family` value to a fallback list. All themes use this font. Do not put
-  `font-family` or `font-size` in a theme.
+  adds each `font-family` value to a fallback list. All themes use this font with its real bold and
+  italic faces. Do not put other font settings in a theme, such as `font-family`, `font-size`,
+  `font-style-bold`, `font-style-italic`, or `adjust-cell-width`. The only permitted font setting is
+  `font-thicken`. `src/tests/themes.test.ts` applies each theme and makes sure of this.
 - `applyTmuxConfig(path, content)` patches the tmux config and reloads tmux. It also reinstalls the
   plugins and restarts the server when the plugin set changes.
 

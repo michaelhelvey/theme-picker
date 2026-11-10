@@ -7,7 +7,7 @@ const BLOCK_START = ">>> theme-picker >>>";
 const BLOCK_END = "<<< theme-picker <<<";
 
 /**
- * Reports that a theme helper could not read, write, or remove a file.
+ * Reports that a theme helper could not read or write a file.
  *
  * @param operation The file system operation that failed.
  * @param filePath The path of the file that the operation used.
@@ -16,7 +16,7 @@ export class ThemeFileError extends Error {
   override name = "ThemeFileError";
 
   constructor(
-    readonly operation: "read" | "write" | "remove",
+    readonly operation: "read" | "write",
     readonly filePath: string,
     options?: ErrorOptions,
   ) {

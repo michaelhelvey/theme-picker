@@ -10,8 +10,7 @@ const tmuxConfigPath = path.join(homeDir, ".tmux.conf");
 const neovimColorsPath = path.join(homeDir, ".config", "nvim", "lua", "custom", "colors.lua");
 
 const ghosttyConfig = `font-thicken = true
-theme = Tomorrow Night Eighties
-adjust-cell-width = "5%"`;
+theme = Tomorrow Night Eighties`;
 
 const tmuxConfig = `# tmux defaults
 # Managed by theme-picker. Do not edit manually.`;

@@ -10,9 +10,7 @@ const tmuxConfigPath = path.join(homeDir, ".tmux.conf");
 const neovimColorsPath = path.join(homeDir, ".config", "nvim", "lua", "custom", "colors.lua");
 
 const ghosttyConfig = `font-thicken = true
-theme = jonhoo
-font-style-italic = false
-font-style-bold = false`;
+theme = jonhoo`;
 
 const tmuxConfig = `# Base16 Gruvbox dark, hard
 # Scheme author: Dawid Kurek (dawikur@gmail.com), morhetz (https://github.com/morhetz/gruvbox)

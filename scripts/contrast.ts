@@ -351,20 +351,18 @@ function checks(
   ];
   const brightText = background === "dark" ? [7, 15] : [0];
   const textPalette = [...Array(16).keys()].filter((index) => background === "light" || index > 0);
-  console.log(`syntax color groups, upstream: ${colorPartition(spec, upstream)}`);
-  console.log(`syntax color groups, new:      ${colorPartition(spec, next)}`);
-  console.log(`contrast order without Comment, upstream: ${contrastOrder(spec, upstream)}`);
-  console.log(`contrast order without Comment, new:      ${contrastOrder(spec, next)}\n`);
+  const comment = groupRatio(next, "Comment");
   return [
     ["Normal fg >= 15:1", groupRatio(next, "Normal") >= 15],
     [
       `code syntax groups >= ${spec.syntaxMinimum}:1`,
       code.every((group) => groupRatio(next, group) >= spec.syntaxMinimum),
     ],
-    ["Comment >= 4.5:1", groupRatio(next, "Comment") >= 4.5],
+    ["Comment >= 4.5:1", comment >= 4.5],
     [
-      "Comment is the dimmest syntax group",
-      code.every((group) => groupRatio(next, group) > groupRatio(next, "Comment")),
+      "Comment is the dimmest syntax group, and LineNr is dimmer",
+      code.every((group) => groupRatio(next, group) > comment) &&
+        groupRatio(next, "LineNr") < comment,
     ],
     [
       "syntax groups keep the upstream order of contrast",
@@ -460,7 +458,10 @@ for (const background of variants) {
       `| ${item} | ${color} | ${ratio.toFixed(2)} | ${newColor} | ${newRatio.toFixed(2)} | ${delta === undefined ? "gray" : delta.toFixed(2)} |`,
     );
   }
-  console.log();
+  console.log(`\nsyntax color groups, upstream: ${colorPartition(spec, upstream)}`);
+  console.log(`syntax color groups, new:      ${colorPartition(spec, next)}`);
+  console.log(`contrast order without Comment, upstream: ${contrastOrder(spec, upstream)}`);
+  console.log(`contrast order without Comment, new:      ${contrastOrder(spec, next)}\n`);
   for (const [check, ok] of checks(spec, background, upstream, next)) {
     console.log(`${ok ? "PASS" : "FAIL"} ${check}`);
     failed ||= !ok;

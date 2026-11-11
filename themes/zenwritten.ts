@@ -130,7 +130,8 @@ return {
 
 /**
  * The zenwritten theme. This theme applies the Zenwritten Dark / Zenwritten Light colors from
- * zenbones-theme/zenbones.nvim to Ghostty, tmux, and Neovim.
+ * zenbones-theme/zenbones.nvim to Ghostty, tmux, and Neovim. The Ghostty themes are files that
+ * this theme writes, because the built-in Ghostty Zenwritten themes have a different palette 8.
  */
 export default {
   apply() {

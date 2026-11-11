@@ -79,6 +79,44 @@ export function writeFileContent(filePath: string, content: string): ResultAsync
   );
 }
 
+/**
+ * The colors of a Ghostty theme file.
+ */
+export interface GhosttyTheme {
+  /** The first comment line, for example `Zenwritten Dark (high contrast)`. */
+  title: string;
+  /** The upstream theme and plugin, for example `zenwritten from zenbones-theme/zenbones.nvim`. */
+  source: string;
+  foreground: string;
+  background: string;
+  cursor: string;
+  selection: string;
+  /** Palette colors 0 to 15. */
+  palette: readonly string[];
+}
+
+/**
+ * Makes the content of a Ghostty theme file. The selection text uses the foreground, and the
+ * cursor text uses the background.
+ *
+ * @example
+ * writeFileContent(path.join(themesDir, "my-dark"), ghosttyThemeContent(dark));
+ */
+export function ghosttyThemeContent(theme: GhosttyTheme): string {
+  return [
+    `# ${theme.title}`,
+    `# Based on ${theme.source}. Managed by theme-picker.`,
+    `foreground = ${theme.foreground}`,
+    `background = ${theme.background}`,
+    `selection-foreground = ${theme.foreground}`,
+    `selection-background = ${theme.selection}`,
+    `cursor-color = ${theme.cursor}`,
+    `cursor-text = ${theme.background}`,
+    ...theme.palette.map((color, index) => `palette = ${index}=${color}`),
+    "",
+  ].join("\n");
+}
+
 function mergeDelimitedBlock(
   existing: string | undefined,
   startMarker: string,

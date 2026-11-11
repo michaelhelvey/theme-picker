@@ -1,7 +1,12 @@
 import os from "node:os";
 import path from "node:path";
 import type { ThemeModule } from "../src/config";
-import { applyGhosttyConfig, writeFileContent } from "../src/theme";
+import {
+  applyGhosttyConfig,
+  type GhosttyTheme,
+  ghosttyThemeContent,
+  writeFileContent,
+} from "../src/theme";
 
 const homeDir = os.homedir();
 
@@ -9,19 +14,16 @@ const ghosttyConfigPath = path.join(homeDir, ".config", "ghostty", "config");
 const ghosttyThemesDir = path.join(homeDir, ".config", "ghostty", "themes");
 const neovimColorsPath = path.join(homeDir, ".config", "nvim", "lua", "custom", "colors.lua");
 
-interface Variant {
+interface Variant extends GhosttyTheme {
   name: string;
-  title: string;
-  foreground: string;
-  background: string;
-  cursor: string;
-  selection: string;
-  palette: readonly string[];
 }
+
+const source = "zenwritten from zenbones-theme/zenbones.nvim";
 
 const dark: Variant = {
   name: "zenwritten-dark",
   title: "Zenwritten Dark (high contrast)",
+  source,
   foreground: "#EEEEEE",
   background: "#131313",
   cursor: "#F1F1F1",
@@ -49,6 +51,7 @@ const dark: Variant = {
 const light: Variant = {
   name: "zenwritten-light",
   title: "Zenwritten Light (high contrast)",
+  source,
   foreground: "#111111",
   background: "#F6F6F6",
   cursor: "#111111",
@@ -72,22 +75,6 @@ const light: Variant = {
     "#5C5C5C",
   ],
 };
-
-function ghosttyTheme(variant: Variant): string {
-  const palette = variant.palette.map((color, index) => `palette = ${index}=${color}`);
-  return [
-    `# ${variant.title}`,
-    "# Based on zenwritten from zenbones-theme/zenbones.nvim. Managed by theme-picker.",
-    `foreground = ${variant.foreground}`,
-    `background = ${variant.background}`,
-    `selection-foreground = ${variant.foreground}`,
-    `selection-background = ${variant.selection}`,
-    `cursor-color = ${variant.cursor}`,
-    `cursor-text = ${variant.background}`,
-    ...palette,
-    "",
-  ].join("\n");
-}
 
 function luaVariant(variant: Variant, options: string): string {
   const terminal = variant.palette.map((color) => `'${color}'`).join(", ");
@@ -205,8 +192,10 @@ return {
  */
 export default {
   apply() {
-    return writeFileContent(path.join(ghosttyThemesDir, dark.name), ghosttyTheme(dark))
-      .andThen(() => writeFileContent(path.join(ghosttyThemesDir, light.name), ghosttyTheme(light)))
+    return writeFileContent(path.join(ghosttyThemesDir, dark.name), ghosttyThemeContent(dark))
+      .andThen(() =>
+        writeFileContent(path.join(ghosttyThemesDir, light.name), ghosttyThemeContent(light)),
+      )
       .andThen(() => applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig))
       .andThen(() => writeFileContent(neovimColorsPath, neovimColors));
   },

@@ -1,7 +1,12 @@
 import os from "node:os";
 import path from "node:path";
 import type { ThemeModule } from "../src/config";
-import { applyGhosttyConfig, writeFileContent } from "../src/theme";
+import {
+  applyGhosttyConfig,
+  type GhosttyTheme,
+  ghosttyThemeContent,
+  writeFileContent,
+} from "../src/theme";
 
 const homeDir = os.homedir();
 
@@ -9,16 +14,13 @@ const ghosttyConfigPath = path.join(homeDir, ".config", "ghostty", "config");
 const ghosttyThemesDir = path.join(homeDir, ".config", "ghostty", "themes");
 const neovimColorsPath = path.join(homeDir, ".config", "nvim", "lua", "custom", "colors.lua");
 
-interface Variant {
+interface Variant extends GhosttyTheme {
   theme: "dragon" | "lotus";
   name: string;
-  title: string;
-  foreground: string;
-  background: string;
-  selection: string;
-  palette: Readonly<Record<string, string>>;
-  terminal: readonly string[];
+  colors: Readonly<Record<string, string>>;
 }
+
+const source = "kanagawa from rebelot/kanagawa.nvim";
 
 const dragonPalette = {
   dragonWhite: "#EAF1EA",
@@ -83,11 +85,13 @@ const dark: Variant = {
   theme: "dragon",
   name: "kanagawa-dragon-hc",
   title: "Kanagawa Dragon (high contrast)",
+  source,
   foreground: dragonPalette.dragonWhite,
   background: "#181616",
+  cursor: dragonPalette.dragonWhite,
   selection: "#223249",
-  palette: dragonPalette,
-  terminal: [
+  colors: dragonPalette,
+  palette: [
     "#0D0C0C",
     dragonPalette.dragonRed,
     dragonPalette.dragonGreen2,
@@ -111,11 +115,13 @@ const light: Variant = {
   theme: "lotus",
   name: "kanagawa-lotus-hc",
   title: "Kanagawa Lotus (high contrast)",
+  source,
   foreground: lotusPalette.lotusInk1,
   background: "#F2ECBC",
+  cursor: lotusPalette.lotusInk1,
   selection: "#C9CBD1",
-  palette: lotusPalette,
-  terminal: [
+  colors: lotusPalette,
+  palette: [
     lotusPalette.lotusInk1,
     lotusPalette.lotusRed,
     lotusPalette.lotusGreen,
@@ -135,30 +141,14 @@ const light: Variant = {
   ],
 };
 
-function ghosttyTheme(variant: Variant): string {
-  const palette = variant.terminal.map((color, index) => `palette = ${index}=${color}`);
-  return [
-    `# ${variant.title}`,
-    "# Based on kanagawa from rebelot/kanagawa.nvim. Managed by theme-picker.",
-    `foreground = ${variant.foreground}`,
-    `background = ${variant.background}`,
-    `selection-foreground = ${variant.foreground}`,
-    `selection-background = ${variant.selection}`,
-    `cursor-color = ${variant.foreground}`,
-    `cursor-text = ${variant.background}`,
-    ...palette,
-    "",
-  ].join("\n");
-}
-
 function luaPalette(): string {
-  return Object.entries({ ...dark.palette, ...light.palette })
+  return Object.entries({ ...dark.colors, ...light.colors })
     .map(([name, color]) => `${name} = '${color}',`)
     .join("\n            ");
 }
 
 function luaTerminal(variant: Variant): string {
-  return `${variant.theme} = { term = { ${variant.terminal.map((color) => `'${color}'`).join(", ")} } },`;
+  return `${variant.theme} = { term = { ${variant.palette.map((color) => `'${color}'`).join(", ")} } },`;
 }
 
 const ghosttyConfig = `font-thicken = true
@@ -239,8 +229,10 @@ return {
  */
 export default {
   apply() {
-    return writeFileContent(path.join(ghosttyThemesDir, dark.name), ghosttyTheme(dark))
-      .andThen(() => writeFileContent(path.join(ghosttyThemesDir, light.name), ghosttyTheme(light)))
+    return writeFileContent(path.join(ghosttyThemesDir, dark.name), ghosttyThemeContent(dark))
+      .andThen(() =>
+        writeFileContent(path.join(ghosttyThemesDir, light.name), ghosttyThemeContent(light)),
+      )
       .andThen(() => applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig))
       .andThen(() => writeFileContent(neovimColorsPath, neovimColors));
   },

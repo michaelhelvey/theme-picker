@@ -47,6 +47,7 @@ const highlightSchema = z.object({ fg: hexSchema.optional(), bg: hexSchema.optio
 const probeSchema = z.object({
   groups: z.record(z.string(), highlightSchema),
   terminal: z.array(hexSchema).length(16),
+  loads: z.number(),
 });
 type Probe = z.infer<typeof probeSchema>;
 
@@ -73,12 +74,14 @@ if vim.env.ZW_CONFIG == 'upstream' then
 else
   vim.o.background = vim.env.ZW_BG == 'dark' and 'light' or 'dark'
   dofile(vim.env.ZW_CONFIG)[1].config()
-  vim.o.background = vim.env.ZW_BG
 end
+local loads = 0
+vim.api.nvim_create_autocmd('ColorScheme', { callback = function() loads = loads + 1 end })
+vim.o.background = vim.env.ZW_BG
 local function hex(value)
   return value and string.format('#%06X', value) or nil
 end
-local out = { groups = {}, terminal = {} }
+local out = { groups = {}, terminal = {}, loads = loads }
 for _, name in ipairs(vim.split(vim.env.ZW_GROUPS, ',')) do
   local hl = vim.api.nvim_get_hl(0, { name = name, link = false })
   out.groups[name] = { fg = hex(hl.fg), bg = hex(hl.bg) }
@@ -245,6 +248,7 @@ function checks(background: Background, upstream: Theme, next: Theme): [string, 
     ["Comment >= 4.5:1", groupRatio(next, "Comment") >= 4.5],
     ["syntax groups keep the upstream order of contrast", order(next) === order(upstream)],
     ["syntax groups share colors as upstream does", partition(next) === partition(upstream)],
+    ["a switch of 'background' loads the colors one time", next.neovim.loads === 1],
     [
       "ghostty fg and bg match Neovim Normal",
       next.ghostty.foreground === fg(next, "Normal") &&

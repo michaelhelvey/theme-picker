@@ -109,6 +109,10 @@ const neovimColors = `-- Theme: zenwritten, high contrast (based on zenbones-the
 -- background color (OSC 11). Ghostty follows the macOS appearance, thus 'background' is correct at
 -- startup. If 'background' changes later, the theme loads again.
 --
+-- The name is 'zenwritten-hc', not 'zenwritten'. When 'background' changes, Neovim loads the
+-- colorscheme with the name in g:colors_name again. With 'zenwritten', Neovim loads the upstream
+-- colors first.
+--
 -- The colors come from the zenbones generator with a custom fg and bg ("Create your own
 -- colorscheme" in the zenbones documentation). All other colors derive from these two colors.
 -- zenbones makes Type and Delimiter from bg, thus they do not get the higher contrast of fg. The
@@ -145,12 +149,12 @@ return {
           }
         end)
 
-        vim.g.colors_name = 'zenwritten'
+        vim.g.colors_name = 'zenwritten-hc'
         lush(specs)
         for index, color in ipairs(variant.terminal) do
           vim.g['terminal_color_' .. (index - 1)] = color
         end
-        vim.api.nvim_exec_autocmds('ColorScheme', { pattern = 'zenwritten' })
+        vim.api.nvim_exec_autocmds('ColorScheme', { pattern = 'zenwritten-hc' })
 
         if package.loaded.lualine then
           require('lualine').setup({ options = { theme = 'auto' } })

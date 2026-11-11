@@ -40,7 +40,15 @@ const syntaxGroups = [
   "Comment",
 ] as const;
 const textGroups = ["Normal", ...syntaxGroups, "LineNr"] as const;
-const probedGroups = [...textGroups, "Visual", "Cursor"] as const;
+const accentGroups = [
+  "Error",
+  "DiagnosticOk",
+  "WarningMsg",
+  "DiagnosticInfo",
+  "DiagnosticHint",
+  "MiniIconsCyan",
+] as const;
+const probedGroups = [...textGroups, ...accentGroups, "Visual", "Cursor"] as const;
 
 const hexSchema = z.string().regex(/^#[0-9A-Fa-f]{6}$/);
 const highlightSchema = z.object({ fg: hexSchema.optional(), bg: hexSchema.optional() });
@@ -259,6 +267,10 @@ function checks(background: Background, upstream: Theme, next: Theme): [string, 
       next.ghostty.selectionBackground === bg(next, "Visual"),
     ],
     ["ghostty cursor matches Neovim Cursor", next.ghostty.cursorColor === bg(next, "Cursor")],
+    [
+      "Neovim accent colors match palette 1 to 6",
+      accentGroups.map((group) => fg(next, group)).join() === next.ghostty.palette.slice(1, 7).join(),
+    ],
     [
       "ghostty palette matches Neovim terminal colors",
       next.ghostty.palette.join() === next.neovim.terminal.join(),

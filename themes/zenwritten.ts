@@ -60,7 +60,7 @@ const light: Variant = {
     "#944927",
     "#286486",
     "#88507D",
-    "#2F7A83",
+    "#2F7983",
     "#353535",
     "#666666",
     "#94253E",
@@ -114,7 +114,8 @@ const neovimColors = `-- Theme: zenwritten, high contrast (based on zenbones-the
 -- colors first.
 --
 -- The colors come from the zenbones generator with a custom fg and bg ("Create your own
--- colorscheme" in the zenbones documentation). All other colors derive from these two colors.
+-- colorscheme" in the zenbones documentation). The accent colors come from the terminal colors.
+-- All other colors derive from these colors.
 -- zenbones makes Type and Delimiter from bg, thus they do not get the higher contrast of fg. The
 -- overrides put them back between the same neighbors as upstream.
 local variants = {
@@ -136,10 +137,12 @@ return {
       local function load()
         local background = vim.o.background
         local variant = variants[background]
-        local palette = util.palette_extend({
-          bg = lush.hsluv(variant.bg),
-          fg = lush.hsluv(variant.fg),
-        }, background)
+        local colors = { bg = lush.hsluv(variant.bg), fg = lush.hsluv(variant.fg) }
+        for index, name in ipairs({ 'rose', 'leaf', 'wood', 'water', 'blossom', 'sky' }) do
+          colors[name] = lush.hsluv(variant.terminal[index + 1])
+          colors[name .. '1'] = lush.hsluv(variant.terminal[index + 9])
+        end
+        local palette = util.palette_extend(colors, background)
 
         local base = generator.generate(palette, background, variant.options)
         local specs = lush.extends({ base }).with(function()
@@ -192,9 +195,11 @@ return {
  *   Identifier and Special. Delimiter is between Constant and Comment.
  * - Ghostty: foreground, background, cursor, and selection are the same as in Neovim. Dark palette
  *   7 is the foreground, 8 is the comment color, and 15 is `#FFFFFF`. Light palette 0 is the
- *   foreground, 6 is `#2F7A83` (upstream `#3B8992`), and 8 is the comment color. The Neovim
+ *   foreground, 6 is `#2F7983` (upstream `#3B8992`), and 8 is the comment color. The Neovim
  *   terminal uses the same 16 colors. All palette colors that show text have a contrast of 4.5:1
  *   or more.
+ * - Neovim: the accent colors (red, green, yellow, blue, magenta, and cyan) are palette 1 to 6 and
+ *   9 to 14. Only light cyan is different from upstream.
  *
  * The theme writes its own Ghostty theme files, because the colors are custom.
  */

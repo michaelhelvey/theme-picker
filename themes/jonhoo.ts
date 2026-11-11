@@ -1,48 +1,15 @@
 import os from "node:os";
 import path from "node:path";
 import type { ThemeModule } from "../src/config";
-import { applyGhosttyConfig, applyTmuxConfig, writeFileContent } from "../src/theme";
+import { applyGhosttyConfig, writeFileContent } from "../src/theme";
 
 const homeDir = os.homedir();
 
 const ghosttyConfigPath = path.join(homeDir, ".config", "ghostty", "config");
-const tmuxConfigPath = path.join(homeDir, ".tmux.conf");
 const neovimColorsPath = path.join(homeDir, ".config", "nvim", "lua", "custom", "colors.lua");
 
 const ghosttyConfig = `font-thicken = true
 theme = jonhoo`;
-
-const tmuxConfig = `# Base16 Gruvbox dark, hard
-# Scheme author: Dawid Kurek (dawikur@gmail.com), morhetz (https://github.com/morhetz/gruvbox)
-# Template author: Tinted Theming: (https://github.com/tinted-theming)
-
-# default statusbar colors
-set-option -g status-style "fg=#bdae93,bg=#3c3836"
-
-# default window title colors
-set-window-option -g window-status-style "fg=#bdae93,bg=default"
-
-# active window title colors
-set-window-option -g window-status-current-style "fg=#fabd2f,bg=default"
-
-# pane border
-set-option -g pane-border-style "fg=#3c3836"
-set-option -g pane-active-border-style "fg=#504945"
-
-# message text
-set-option -g message-style "fg=#d5c4a1,bg=#3c3836"
-
-# pane number display
-set-option -g display-panes-active-colour "#b8bb26"
-set-option -g display-panes-colour "#fabd2f"
-
-# clock
-set-window-option -g clock-mode-colour "#b8bb26"
-
-# copy mode highlight
-set-window-option -g mode-style "fg=#bdae93,bg=#504945"
-
-set-option -g status-position bottom`;
 
 const neovimColors = `-- Theme: jonhoo (Gruvbox Dark Hard)
 -- Managed by theme-picker. Do not edit manually.
@@ -100,12 +67,12 @@ return {
 }`;
 
 /**
- * The jonhoo theme. This theme applies the Gruvbox Dark Hard colors to Ghostty, tmux, and Neovim.
+ * The jonhoo theme. This theme applies the Gruvbox Dark Hard colors to Ghostty and Neovim.
  */
 export default {
   apply() {
-    return applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig)
-      .andThen(() => applyTmuxConfig(tmuxConfigPath, tmuxConfig))
-      .andThen(() => writeFileContent(neovimColorsPath, neovimColors));
+    return applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig).andThen(() =>
+      writeFileContent(neovimColorsPath, neovimColors),
+    );
   },
 } satisfies ThemeModule;

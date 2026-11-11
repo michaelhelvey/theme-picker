@@ -1,7 +1,7 @@
 import os from "node:os";
 import path from "node:path";
 import type { ThemeModule } from "../src/config";
-import { applyGhosttyConfig, applyTmuxConfig, writeFileContent } from "../src/theme";
+import { applyGhosttyConfig, writeFileContent } from "../src/theme";
 
 const homeDir = os.homedir();
 
@@ -9,7 +9,6 @@ const ghosttyConfigPath = path.join(homeDir, ".config", "ghostty", "config");
 const ghosttyThemesDir = path.join(homeDir, ".config", "ghostty", "themes");
 const ghosttyDarkThemePath = path.join(ghosttyThemesDir, "zenwritten-dark");
 const ghosttyLightThemePath = path.join(ghosttyThemesDir, "zenwritten-light");
-const tmuxConfigPath = path.join(homeDir, ".tmux.conf");
 const neovimColorsPath = path.join(homeDir, ".config", "nvim", "lua", "custom", "colors.lua");
 
 const ghosttyConfig = `font-thicken = true
@@ -67,34 +66,6 @@ palette = 7=#353535
 palette = 15=#5C5C5C
 `;
 
-const tmuxConfig = `# Zenwritten Dark
-# Colors from zenbones-theme/zenbones.nvim extras/tmux/zenwritten_dark.tmux
-
-# default statusbar colors
-set-option -g status-style "fg=#B279A7,bg=#BBBBBB"
-
-# active window title colors
-set-window-option -g window-status-current-style "fg=#B279A7,bg=#BBBBBB,bold"
-
-# pane border
-set-option -g pane-border-style "fg=#B279A7"
-set-option -g pane-active-border-style "fg=#B279A7"
-
-# message text
-set-option -g message-style "fg=#191919,bg=#404040"
-
-# pane number display
-set-option -g display-panes-active-colour "#B279A7"
-set-option -g display-panes-colour "#B279A7"
-
-# clock
-set-window-option -g clock-mode-colour "#B279A7"
-
-# copy mode highlight
-set-window-option -g mode-style "fg=#191919,bg=#404040"
-
-set-option -g status-position bottom`;
-
 const neovimColors = `-- Theme: zenwritten (zenbones-theme/zenbones.nvim)
 -- Managed by theme-picker. Do not edit manually.
 --
@@ -130,15 +101,14 @@ return {
 
 /**
  * The zenwritten theme. This theme applies the Zenwritten Dark / Zenwritten Light colors from
- * zenbones-theme/zenbones.nvim to Ghostty, tmux, and Neovim. The Ghostty themes are files that
- * this theme writes, because the built-in Ghostty Zenwritten themes have a different palette 8.
+ * zenbones-theme/zenbones.nvim to Ghostty and Neovim. The Ghostty themes are files that this
+ * theme writes, because the built-in Ghostty Zenwritten themes have a different palette 8.
  */
 export default {
   apply() {
     return writeFileContent(ghosttyDarkThemePath, ghosttyDarkTheme)
       .andThen(() => writeFileContent(ghosttyLightThemePath, ghosttyLightTheme))
       .andThen(() => applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig))
-      .andThen(() => applyTmuxConfig(tmuxConfigPath, tmuxConfig))
       .andThen(() => writeFileContent(neovimColorsPath, neovimColors));
   },
 } satisfies ThemeModule;

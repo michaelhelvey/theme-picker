@@ -8,7 +8,7 @@ const repoRoot = path.join(import.meta.dirname, "..", "..");
 const themesDir = path.join(repoRoot, "themes");
 const cliEntry = path.join(repoRoot, "src", "index.ts");
 const ghosttyBinary = "/Applications/Ghostty.app/Contents/MacOS/ghostty";
-const stubbedCommands = ["defaults", "rex", "osascript", "tmux"];
+const stubbedCommands = ["defaults", "rex", "osascript"];
 
 const themes = (await enumerateThemes(themesDir))._unsafeUnwrap();
 const hasGhostty = process.platform === "darwin" && (await Bun.file(ghosttyBinary).exists());
@@ -32,10 +32,7 @@ describe.skipIf(!hasGhostty)("every theme", () => {
     await mkdir(bin);
     for (const command of stubbedCommands) {
       const stub = path.join(bin, command);
-      await writeFile(
-        stub,
-        `#!/bin/sh\necho "${command} $*" >> "$HOME/calls.log"\n[ "${command}" = tmux ] && exit 1\nexit 0\n`,
-      );
+      await writeFile(stub, `#!/bin/sh\necho "${command} $*" >> "$HOME/calls.log"\nexit 0\n`);
       await chmod(stub, 0o755);
     }
   });

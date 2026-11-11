@@ -1,46 +1,14 @@
 import os from "node:os";
 import path from "node:path";
 import type { ThemeModule } from "../src/config";
-import { applyGhosttyConfig, applyTmuxConfig, writeFileContent } from "../src/theme";
+import { applyGhosttyConfig, writeFileContent } from "../src/theme";
 
 const homeDir = os.homedir();
 
 const ghosttyConfigPath = path.join(homeDir, ".config", "ghostty", "config");
-const tmuxConfigPath = path.join(homeDir, ".tmux.conf");
 const neovimColorsPath = path.join(homeDir, ".config", "nvim", "lua", "custom", "colors.lua");
 
 const ghosttyConfig = `theme = plain`;
-
-const tmuxConfig = `# Plain black and white
-# Managed by theme-picker. Do not edit manually.
-
-# default statusbar colors
-set-option -g status-style "fg=#ffffff,bg=#000000"
-
-# default window title colors
-set-window-option -g window-status-style "fg=#ffffff,bg=default"
-
-# active window title colors
-set-window-option -g window-status-current-style "fg=#000000,bg=#ffffff"
-
-# pane border
-set-option -g pane-border-style "fg=#ffffff"
-set-option -g pane-active-border-style "fg=#ffffff"
-
-# message text
-set-option -g message-style "fg=#000000,bg=#ffffff"
-
-# pane number display
-set-option -g display-panes-active-colour "#ffffff"
-set-option -g display-panes-colour "#ffffff"
-
-# clock
-set-window-option -g clock-mode-colour "#ffffff"
-
-# copy mode highlight
-set-window-option -g mode-style "fg=#000000,bg=#ffffff"
-
-set-option -g status-position bottom`;
 
 const neovimColors = `-- Theme: plain (Pure black and white)
 -- Managed by theme-picker. Do not edit manually.
@@ -134,12 +102,12 @@ return {
 }`;
 
 /**
- * The plain theme. This theme applies the Pure black and white colors to Ghostty, tmux, and Neovim.
+ * The plain theme. This theme applies the Pure black and white colors to Ghostty and Neovim.
  */
 export default {
   apply() {
-    return applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig)
-      .andThen(() => applyTmuxConfig(tmuxConfigPath, tmuxConfig))
-      .andThen(() => writeFileContent(neovimColorsPath, neovimColors));
+    return applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig).andThen(() =>
+      writeFileContent(neovimColorsPath, neovimColors),
+    );
   },
 } satisfies ThemeModule;

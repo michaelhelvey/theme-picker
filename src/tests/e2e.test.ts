@@ -85,7 +85,7 @@ describe("theme-picker cli", () => {
     await mkdir(path.join(homeDir, ".config", "ghostty"), { recursive: true });
     await mkdir(path.join(dotfilesDir, ".config", "ghostty"), { recursive: true });
     await mkdir(fixtureThemes);
-    const configs = [".tmux.conf", ".config/ghostty/config"];
+    const configs = [".zshrc", ".config/ghostty/config"];
 
     for (const config of configs) {
       const targetPath = path.join(dotfilesDir, config);
@@ -100,7 +100,7 @@ describe("theme-picker cli", () => {
         [
           `import { patchDelimitedBlock } from ${JSON.stringify(themeHelper)};`,
           "export default {",
-          `  apply: () => patchDelimitedBlock(${JSON.stringify(path.join(homeDir, ".tmux.conf"))}, "#", "theme = ${name}")`,
+          `  apply: () => patchDelimitedBlock(${JSON.stringify(path.join(homeDir, ".zshrc"))}, "#", "theme = ${name}")`,
           `    .andThen(() => patchDelimitedBlock(${JSON.stringify(path.join(homeDir, ".config/ghostty/config"))}, "#", "theme = ${name}")),`,
           "};",
         ].join("\n"),

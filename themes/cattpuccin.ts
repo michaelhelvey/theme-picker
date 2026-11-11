@@ -1,26 +1,15 @@
 import os from "node:os";
 import path from "node:path";
 import type { ThemeModule } from "../src/config";
-import { applyGhosttyConfig, applyTmuxConfig, writeFileContent } from "../src/theme";
+import { applyGhosttyConfig, writeFileContent } from "../src/theme";
 
 const homeDir = os.homedir();
 
 const ghosttyConfigPath = path.join(homeDir, ".config", "ghostty", "config");
-const tmuxConfigPath = path.join(homeDir, ".tmux.conf");
 const neovimColorsPath = path.join(homeDir, ".config", "nvim", "lua", "custom", "colors.lua");
 
 const ghosttyConfig = `font-thicken = true
 theme = dark:Catppuccin Mocha,light:Catppuccin Latte`;
-
-const tmuxConfig = `set -g @plugin 'fabioluciano/tmux-powerkit'
-set -g @powerkit_plugins "datetime,git"
-set-option -g status-position bottom
-set -g @powerkit_status_position "bottom"
-set-option -g status-style bg=default
-set -g @powerkit_theme "catppuccin"
-set -g @powerkit_theme_variant "mocha"
-set -g @powerkit_separator_style "normal"
-set -g @powerkit_edge_separator_style "normal"`;
 
 const neovimColors = `-- Theme: cattpuccin (Catppuccin Mocha / Catppuccin Latte)
 -- Managed by theme-picker. Do not edit manually.
@@ -62,12 +51,12 @@ return {
 
 /**
  * The cattpuccin theme. This theme applies the Catppuccin Mocha / Catppuccin Latte colors to
- * Ghostty, tmux, and Neovim.
+ * Ghostty and Neovim.
  */
 export default {
   apply() {
-    return applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig)
-      .andThen(() => applyTmuxConfig(tmuxConfigPath, tmuxConfig))
-      .andThen(() => writeFileContent(neovimColorsPath, neovimColors));
+    return applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig).andThen(() =>
+      writeFileContent(neovimColorsPath, neovimColors),
+    );
   },
 } satisfies ThemeModule;

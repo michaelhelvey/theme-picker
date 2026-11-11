@@ -1,19 +1,15 @@
 import os from "node:os";
 import path from "node:path";
 import type { ThemeModule } from "../src/config";
-import { applyGhosttyConfig, applyTmuxConfig, writeFileContent } from "../src/theme";
+import { applyGhosttyConfig, writeFileContent } from "../src/theme";
 
 const homeDir = os.homedir();
 
 const ghosttyConfigPath = path.join(homeDir, ".config", "ghostty", "config");
-const tmuxConfigPath = path.join(homeDir, ".tmux.conf");
 const neovimColorsPath = path.join(homeDir, ".config", "nvim", "lua", "custom", "colors.lua");
 
 const ghosttyConfig = `font-thicken = true
 theme = Tomorrow Night Eighties`;
-
-const tmuxConfig = `# tmux defaults
-# Managed by theme-picker. Do not edit manually.`;
 
 const neovimColors = `-- Theme: sphaero (base16-tomorrow-night-eighties)
 -- Managed by theme-picker. Do not edit manually.
@@ -36,13 +32,13 @@ return {
 }`;
 
 /**
- * The sphaero theme. This theme applies the base16-tomorrow-night-eighties colors to Ghostty, tmux,
- * and Neovim.
+ * The sphaero theme. This theme applies the base16-tomorrow-night-eighties colors to Ghostty and
+ * Neovim.
  */
 export default {
   apply() {
-    return applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig)
-      .andThen(() => applyTmuxConfig(tmuxConfigPath, tmuxConfig))
-      .andThen(() => writeFileContent(neovimColorsPath, neovimColors));
+    return applyGhosttyConfig(ghosttyConfigPath, ghosttyConfig).andThen(() =>
+      writeFileContent(neovimColorsPath, neovimColors),
+    );
   },
 } satisfies ThemeModule;

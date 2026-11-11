@@ -51,13 +51,15 @@ need a running Rex app. Set `REX_CLIENT` to select an app when more than one is 
 
 ## Scripts
 
-`scripts/contrast.ts` prints the WCAG contrast ratios of the `zenwritten` theme against upstream
-zenwritten, for Neovim and Ghostty, and checks the contrast targets of the theme. It needs `nvim`
-and a directory that contains `zenbones.nvim` and `lush.nvim` (default: `~/.local/share/nvim/lazy`).
-It does not change your real config files.
+`scripts/contrast.ts` prints the WCAG contrast ratios of a high contrast theme (`zenwritten` or
+`kanagawa`) against its upstream theme, for Neovim and Ghostty, and checks the contrast targets of
+the theme. It needs `nvim` and a directory that contains the plugins of the theme: `zenbones.nvim`
+and `lush.nvim`, or `kanagawa.nvim` (default: `~/.local/share/nvim/lazy`). It does not change your
+real config files.
 
 ```bash
-bun run scripts/contrast.ts --plugins ~/.local/share/nvim/lazy
+bun run scripts/contrast.ts zenwritten --plugins ~/.local/share/nvim/lazy
+bun run scripts/contrast.ts kanagawa
 ```
 
 ## Add a theme

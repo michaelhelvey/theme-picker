@@ -226,6 +226,7 @@ return {
  *   `#1F1F28`). All palette colors that show text have a contrast of 4.5:1 or more.
  *
  * The theme writes its own Ghostty theme files, because the colors are custom.
+ * `scripts/kanagawa-colors.ts` makes `dragonPalette` and `lotusPalette`.
  */
 export default {
   apply() {

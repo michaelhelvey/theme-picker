@@ -62,6 +62,14 @@ bun run scripts/contrast.ts zenwritten --plugins ~/.local/share/nvim/lazy
 bun run scripts/contrast.ts kanagawa
 ```
 
+`scripts/kanagawa-colors.ts` prints the `dragonPalette` and `lotusPalette` colors of
+`themes/kanagawa.ts` from the upstream kanagawa colors. Run it when you change a contrast target,
+then copy the output into the theme and run the contrast check.
+
+```bash
+bun run scripts/kanagawa-colors.ts
+```
+
 ## Add a theme
 
 A theme is one Typescript module at `themes/<name>.ts`. The module default-exports an object with an

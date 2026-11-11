@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { z } from "zod";
+import { contrast, hueDistance, oklch } from "./color";
 
 /**
  * Prints WCAG contrast ratios of a high contrast theme against its background, for the upstream
@@ -160,41 +161,10 @@ end
 io.stdout:write(vim.json.encode(out))
 `;
 
-function linear(hex: string): [number, number, number] {
-  const [r = 0, g = 0, b = 0] = [1, 3, 5].map((start) => {
-    const value = Number.parseInt(hex.slice(start, start + 2), 16) / 255;
-    return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
-  });
-  return [r, g, b];
-}
-
-function luminance(hex: string): number {
-  const [r, g, b] = linear(hex);
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
-
-function contrast(a: string, b: string): number {
-  const [high, low] = [luminance(a), luminance(b)].sort((x, y) => y - x);
-  return ((high ?? 0) + 0.05) / ((low ?? 0) + 0.05);
-}
-
-function oklch(hex: string): { chroma: number; hue: number } {
-  const [r, g, b] = linear(hex);
-  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
-  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
-  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
-  const a = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s;
-  const bb = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s;
-  return { chroma: Math.hypot(a, bb), hue: (Math.atan2(bb, a) * 180) / Math.PI };
-}
-
 function hueDelta(upstream: string, next: string): number | undefined {
-  const [a, b] = [oklch(upstream), oklch(next)];
-  if (a.chroma < 0.02 || b.chroma < 0.02) {
-    return undefined;
-  }
-  const delta = Math.abs(a.hue - b.hue) % 360;
-  return Math.min(delta, 360 - delta);
+  return oklch(upstream).chroma < 0.02 || oklch(next).chroma < 0.02
+    ? undefined
+    : hueDistance(upstream, next);
 }
 
 function required(value: string | undefined, what: string): string {

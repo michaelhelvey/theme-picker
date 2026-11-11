@@ -5,8 +5,8 @@ Modify the look and feel of your terminal tools with one fell swoop.
 ## Motivation
 
 I'm addicted to fiddling with my dotfiles, but when I change my color themes, it's annoying to have
-to do it in ever tool that I use individually e.g. vim. tmux, my terminal emulator, etc etc. I want
-a tool that applies a logical theme to _everything_ with one command.
+to do it in ever tool that I use individually e.g. vim, my terminal emulator, etc etc. I want a tool
+that applies a logical theme to _everything_ with one command.
 
 ## Getting Started
 

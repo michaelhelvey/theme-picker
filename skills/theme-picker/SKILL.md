@@ -34,8 +34,8 @@ shared config file. Put the content directly in the theme module as template lit
 separate content files. Check each content string for backticks and for `${`. Escape them if they
 occur.
 
-The reference theme writes the Ghostty config, the tmux config, and the Neovim `colors.lua`. Use
-those files as examples, not as a fixed list.
+The reference theme writes the Ghostty config and the Neovim `colors.lua`. Use those files as
+examples, not as a fixed list.
 
 ## Step 2: Write the module
 
@@ -56,8 +56,8 @@ file in the Stow package. If a link target is missing, the write creates it when
 directory exists. If that parent directory is missing, the write returns an error and keeps the
 link. Do not remove links before a write.
 
-For the common dotfiles apps, `src/theme.ts` also has convenience helpers that patch the block and
-reload the app:
+For Ghostty, `src/theme.ts` also has a convenience helper that patches the block and reloads the
+app:
 
 - `applyGhosttyConfig(path, content)` patches the Ghostty config and asks a running Ghostty to
   reload. A closed Ghostty reads the config on its next start. Live reload needs macOS Accessibility
@@ -69,11 +69,8 @@ reload the app:
   italic faces. Do not put other font settings in a theme, such as `font-family`, `font-size`,
   `font-style-bold`, `font-style-italic`, or `adjust-cell-width`. The only permitted font setting is
   `font-thicken`. `src/tests/themes.test.ts` applies each theme and makes sure of this.
-- `applyTmuxConfig(path, content)` patches the tmux config and reloads tmux. It also reinstalls the
-  plugins and restarts the server when the plugin set changes.
 
-Use these when the target is one of those apps. Use `patchDelimitedBlock` and `tryRunCommand` for
-any other file.
+Use it when the target is Ghostty. Use `patchDelimitedBlock` and `tryRunCommand` for any other file.
 
 Template:
 

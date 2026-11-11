@@ -49,6 +49,17 @@ Settings > Privacy & Security > Accessibility and Automation. Command warnings i
 output, so Rex connection, client selection, and import errors remain visible. Rex theme imports
 need a running Rex app. Set `REX_CLIENT` to select an app when more than one is connected.
 
+## Scripts
+
+`scripts/contrast.ts` prints the WCAG contrast ratios of the `zenwritten` theme against upstream
+zenwritten, for Neovim and Ghostty, and checks the contrast targets of the theme. It needs `nvim`
+and a directory that contains `zenbones.nvim` and `lush.nvim` (default:
+`~/.local/share/nvim/lazy`). It does not change your real config files.
+
+```bash
+bun run scripts/contrast.ts --plugins ~/.local/share/nvim/lazy
+```
+
 ## Add a theme
 
 A theme is one Typescript module at `themes/<name>.ts`. The module default-exports an object with an

@@ -50,22 +50,25 @@ const accentGroups = [
 ] as const;
 const probedGroups = [...textGroups, ...accentGroups, "Visual", "Cursor"] as const;
 
-const hexSchema = z.string().regex(/^#[0-9A-Fa-f]{6}$/);
+const hexSchema = z
+  .string()
+  .regex(/^#[0-9A-Fa-f]{6}$/)
+  .transform((hex) => hex.toUpperCase());
 const highlightSchema = z.object({ fg: hexSchema.optional(), bg: hexSchema.optional() });
 const probeSchema = z.object({
   groups: z.record(z.string(), highlightSchema),
   terminal: z.array(hexSchema).length(16),
   loads: z.number(),
 });
+const ghosttySchema = z.object({
+  foreground: hexSchema,
+  background: hexSchema,
+  "selection-background": hexSchema,
+  "cursor-color": hexSchema,
+  palette: z.array(hexSchema).length(16),
+});
 type Probe = z.infer<typeof probeSchema>;
-
-interface Ghostty {
-  foreground: string;
-  background: string;
-  selectionBackground: string;
-  cursorColor: string;
-  palette: string[];
-}
+type Ghostty = z.infer<typeof ghosttySchema>;
 
 interface Theme {
   neovim: Probe;
@@ -95,7 +98,7 @@ for _, name in ipairs(vim.split(vim.env.ZW_GROUPS, ',')) do
   out.groups[name] = { fg = hex(hl.fg), bg = hex(hl.bg) }
 end
 for index = 0, 15 do
-  out.terminal[index + 1] = string.upper(vim.g['terminal_color_' .. index])
+  out.terminal[index + 1] = vim.g['terminal_color_' .. index]
 end
 io.stdout:write(vim.json.encode(out))
 `;
@@ -118,7 +121,7 @@ function required(value: string | undefined, what: string): string {
   if (value === undefined) {
     throw new Error(`${what} is not set`);
   }
-  return value.toUpperCase();
+  return value;
 }
 
 function parseGhostty(content: string): Ghostty {
@@ -127,19 +130,12 @@ function parseGhostty(content: string): Ghostty {
     .map((line) => /^([\w-]+)\s*=\s*"?([^"]*)"?$/.exec(line.trim()))
     .filter((match) => match !== null)
     .map((match) => [match[1] ?? "", match[2] ?? ""] as const);
-  const settings = new Map(entries);
   const palette = entries
     .filter(([name]) => name === "palette")
     .map(([, entry]) => entry.split("="))
     .sort(([a], [b]) => Number(a) - Number(b))
-    .map(([, color]) => required(color, "palette color"));
-  return {
-    foreground: required(settings.get("foreground"), "foreground"),
-    background: required(settings.get("background"), "background"),
-    selectionBackground: required(settings.get("selection-background"), "selection-background"),
-    cursorColor: required(settings.get("cursor-color"), "cursor-color"),
-    palette,
-  };
+    .map(([, color]) => color);
+  return ghosttySchema.parse({ ...Object.fromEntries(entries), palette });
 }
 
 function probeNeovim(root: string, plugins: string, background: Background, config: string): Probe {
@@ -264,12 +260,13 @@ function checks(background: Background, upstream: Theme, next: Theme): [string, 
     ],
     [
       "ghostty selection matches Neovim Visual",
-      next.ghostty.selectionBackground === bg(next, "Visual"),
+      next.ghostty["selection-background"] === bg(next, "Visual"),
     ],
-    ["ghostty cursor matches Neovim Cursor", next.ghostty.cursorColor === bg(next, "Cursor")],
+    ["ghostty cursor matches Neovim Cursor", next.ghostty["cursor-color"] === bg(next, "Cursor")],
     [
       "Neovim accent colors match palette 1 to 6",
-      accentGroups.map((group) => fg(next, group)).join() === next.ghostty.palette.slice(1, 7).join(),
+      accentGroups.map((group) => fg(next, group)).join() ===
+        next.ghostty.palette.slice(1, 7).join(),
     ],
     [
       "ghostty palette matches Neovim terminal colors",

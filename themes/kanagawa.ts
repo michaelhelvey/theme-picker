@@ -163,6 +163,7 @@ const neovimColors = `-- Theme: kanagawa, high contrast (based on Kanagawa Drago
 --
 -- The palette entries replace the upstream kanagawa colors with the same name. Thus all syntax,
 -- diagnostic, and UI colors that use them change. The terminal colors are the Ghostty palette.
+-- kanagawa-wave also uses some of these names (for example fujiWhite), thus it also changes.
 --
 -- There is no OptionSet autocommand. When 'background' changes, Neovim loads g:colors_name
 -- ('kanagawa') again. kanagawa keeps the setup() options, thus it loads these colors. This fires
@@ -210,7 +211,7 @@ return {
  * - Syntax colors: the contrast against the background is 7:1 or more. The colors keep the
  *   upstream order of contrast and the upstream groups. Thus colors that are different upstream
  *   stay different.
- * - Comments: the contrast is 4.9:1. Comments are the dimmest syntax color. In Lotus, upstream
+ * - Comments: the contrast is 4.9:1 or more. Comments are the dimmest syntax color. In Lotus, upstream
  *   comments are not the dimmest.
  * - Line numbers, whitespace, and deprecated text stay dimmer than comments. Their contrast
  *   increases by the same factor as comments.
@@ -218,7 +219,8 @@ return {
  * - Neovim: the adjusted colors replace the kanagawa palette colors with the same name. The theme
  *   does not add an OptionSet autocommand. Neovim loads `kanagawa` again when 'background'
  *   changes, and this fires ColorScheme one time. Lualine uses the `kanagawa` theme, which reads
- *   the adjusted colors.
+ *   the adjusted colors. The palette is global, thus `kanagawa-wave` also gets the adjusted
+ *   colors that it shares with Dragon.
  * - Ghostty: foreground, background, cursor, selection, and palette 0 to 15 are the same as in
  *   Neovim. The Neovim terminal uses the same 16 colors. Palette 1 to 6 are the Neovim PreProc,
  *   String, Identifier, Function, Number, and Type colors. Dark palette 7 and 15, and light
